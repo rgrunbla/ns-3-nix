@@ -5,6 +5,7 @@ mkShell {
   nativeBuildInputs = [
     llvmPackages_latest.clang
     pkg-config
+    valgrind
   ];
   buildInputs = [ my-ns-3 ];
 }
