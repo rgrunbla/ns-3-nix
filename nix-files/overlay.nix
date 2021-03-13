@@ -8,7 +8,8 @@ let
 in
 {
   ns-3 = super.ns-3.override {
-    modules =  [ "core" "network" "internet" "point-to-point" "point-to-point-layout" "fd-net-device" "netanim" "flow-monitor"];
+    build_profile = "debug";
+    modules =  ["all_modules" "core" "network" "internet" "point-to-point" "point-to-point-layout" "fd-net-device" "netanim" "flow-monitor" "mobility"];
     stdenv = super.ccacheStdenv.override {
       extraConfig = ''
         export CCACHE_LOGFILE=/var/cache/ccache/ccache.log
