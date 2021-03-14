@@ -2,898 +2,941 @@
 #include <bits/stdint-uintn.h>
 #include <regex>
 
-inline double
-custom_antenna_model(double theta, double phi)
-{
-    //std::cout << "theta = " << theta << ", phi = " << phi << std::endl;
-    float antenna_gain[360]{
-        -6.8f, -6.8f, -6.8f, -6.8f, -6.7f, -6.7f, -6.7f, -6.6f, -6.6f, -6.6f,
-        -6.5f, -6.5f, -6.4f, -6.4f, -6.3f, -6.3f, -6.3f, -6.2f, -6.2f, -6.1f,
-        -6.1f, -6.0f, -6.0f, -5.9f, -5.9f, -5.8f, -5.7f, -5.7f, -5.6f, -5.5f,
-        -5.4f, -5.3f, -5.2f, -5.1f, -5.0f, -4.9f, -4.7f, -4.6f, -4.5f, -4.4f,
-        -4.3f, -4.2f, -4.1f, -4.0f, -3.9f, -3.8f, -3.7f, -3.6f, -3.5f, -3.4f,
-        -3.3f, -3.1f, -3.0f, -2.8f, -2.7f, -2.5f, -2.3f, -2.2f, -2.0f, -1.8f,
-        -1.6f, -1.5f, -1.3f, -1.1f, -1.0f, -0.8f, -0.7f, -0.6f, -0.5f, -0.4f,
-        -0.3f, -0.2f, -0.2f, -0.1f, -0.1f, -0.1f, -0.0f, -0.0f, -0.0f, -0.0f,
-        -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f,
-        -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.0f, -0.0f,
-        -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.1f, -0.1f, -0.1f, -0.2f, -0.2f,
-        -0.3f, -0.4f, -0.5f, -0.6f, -0.7f, -0.8f, -0.9f, -1.0f, -1.2f, -1.3f,
-        -1.5f, -1.7f, -1.8f, -2.0f, -2.2f, -2.3f, -2.5f, -2.7f, -2.9f, -3.0f,
-        -3.2f, -3.3f, -3.5f, -3.6f, -3.8f, -3.9f, -4.1f, -4.2f, -4.3f, -4.4f,
-        -4.5f, -4.6f, -4.7f, -4.7f, -4.8f, -4.9f, -4.9f, -5.0f, -5.1f, -5.2f,
-        -5.2f, -5.3f, -5.4f, -5.5f, -5.6f, -5.6f, -5.7f, -5.8f, -5.9f, -6.0f,
-        -6.1f, -6.2f, -6.3f, -6.4f, -6.4f, -6.5f, -6.6f, -6.7f, -6.7f, -6.8f,
-        -6.8f, -6.9f, -6.9f, -7.0f, -7.0f, -7.0f, -7.0f, -7.0f, -7.0f, -7.0f,
-        -7.0f, -7.0f, -6.9f, -6.9f, -6.9f, -6.8f, -6.8f, -6.7f, -6.7f, -6.6f,
-        -6.5f, -6.5f, -6.4f, -6.3f, -6.2f, -6.2f, -6.1f, -6.0f, -6.0f, -5.9f,
-        -5.8f, -5.8f, -5.7f, -5.6f, -5.6f, -5.5f, -5.5f, -5.4f, -5.3f, -5.3f,
-        -5.2f, -5.1f, -5.1f, -5.0f, -4.9f, -4.9f, -4.8f, -4.7f, -4.6f, -4.6f,
-        -4.5f, -4.4f, -4.3f, -4.2f, -4.1f, -4.0f, -3.8f, -3.7f, -3.6f, -3.4f,
-        -3.3f, -3.1f, -3.0f, -2.8f, -2.6f, -2.4f, -2.3f, -2.1f, -1.9f, -1.7f,
-        -1.6f, -1.4f, -1.2f, -1.1f, -0.9f, -0.8f, -0.7f, -0.5f, -0.4f, -0.3f,
-        -0.2f, -0.2f, -0.1f, -0.1f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f,
-        -0.0f, -0.0f, -0.0f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f,
-        -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f,
-        -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.2f, -0.2f, -0.3f,
-        -0.3f, -0.4f, -0.5f, -0.6f, -0.7f, -0.8f, -0.9f, -1.1f, -1.2f, -1.4f,
-        -1.6f, -1.7f, -1.9f, -2.1f, -2.3f, -2.4f, -2.6f, -2.8f, -2.9f, -3.1f,
-        -3.2f, -3.4f, -3.5f, -3.6f, -3.8f, -3.9f, -4.0f, -4.2f, -4.3f, -4.4f,
-        -4.5f, -4.7f, -4.8f, -4.9f, -5.0f, -5.1f, -5.2f, -5.3f, -5.3f, -5.4f,
-        -5.5f, -5.5f, -5.6f, -5.7f, -5.7f, -5.8f, -5.9f, -5.9f, -6.0f, -6.1f,
-        -6.1f, -6.2f, -6.2f, -6.3f, -6.4f, -6.4f, -6.5f, -6.6f, -6.6f, -6.7f,
-        -6.7f, -6.7f, -6.8f, -6.8f, -6.8f, -6.8f, -6.8f, -6.8f, -6.8f, -6.8};
-    int index = ((phi + M_PI) * 180.0) / M_PI;
-    if (index == 360)
-        index--;
-    return antenna_gain[index];
+inline static double constrainAngleRad(double x) {
+  x = fmod(x, (2 * M_PI));
+  if (x < 0)
+    x += (2 * M_PI);
+  return x;
 }
 
-inline std::string ConvertAddrToString(Address addr)
-{
-    std::ostringstream stream;
-    stream << addr;
-    std::string str = stream.str();
-    return str;
+inline static double constrainAngleDeg(double x) {
+  x = fmod(x, 360);
+  if (x < 0)
+    x += 360;
+  return x;
 }
 
-inline std::string ConvertIpv4AddrToString(Ipv4Address addr)
-{
-    std::ostringstream stream;
-    stream << addr;
-    std::string str = stream.str();
-    return str;
+inline double custom_antenna_model(double theta, double phi) {
+  // std::cout << "theta = " << theta << ", phi = " << phi << std::endl;
+  float antenna_gain[360]{
+      -6.8f, -6.8f, -6.8f, -6.8f, -6.7f, -6.7f, -6.7f, -6.6f, -6.6f, -6.6f,
+      -6.5f, -6.5f, -6.4f, -6.4f, -6.3f, -6.3f, -6.3f, -6.2f, -6.2f, -6.1f,
+      -6.1f, -6.0f, -6.0f, -5.9f, -5.9f, -5.8f, -5.7f, -5.7f, -5.6f, -5.5f,
+      -5.4f, -5.3f, -5.2f, -5.1f, -5.0f, -4.9f, -4.7f, -4.6f, -4.5f, -4.4f,
+      -4.3f, -4.2f, -4.1f, -4.0f, -3.9f, -3.8f, -3.7f, -3.6f, -3.5f, -3.4f,
+      -3.3f, -3.1f, -3.0f, -2.8f, -2.7f, -2.5f, -2.3f, -2.2f, -2.0f, -1.8f,
+      -1.6f, -1.5f, -1.3f, -1.1f, -1.0f, -0.8f, -0.7f, -0.6f, -0.5f, -0.4f,
+      -0.3f, -0.2f, -0.2f, -0.1f, -0.1f, -0.1f, -0.0f, -0.0f, -0.0f, -0.0f,
+      -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f,
+      -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.0f, -0.0f,
+      -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.1f, -0.1f, -0.1f, -0.2f, -0.2f,
+      -0.3f, -0.4f, -0.5f, -0.6f, -0.7f, -0.8f, -0.9f, -1.0f, -1.2f, -1.3f,
+      -1.5f, -1.7f, -1.8f, -2.0f, -2.2f, -2.3f, -2.5f, -2.7f, -2.9f, -3.0f,
+      -3.2f, -3.3f, -3.5f, -3.6f, -3.8f, -3.9f, -4.1f, -4.2f, -4.3f, -4.4f,
+      -4.5f, -4.6f, -4.7f, -4.7f, -4.8f, -4.9f, -4.9f, -5.0f, -5.1f, -5.2f,
+      -5.2f, -5.3f, -5.4f, -5.5f, -5.6f, -5.6f, -5.7f, -5.8f, -5.9f, -6.0f,
+      -6.1f, -6.2f, -6.3f, -6.4f, -6.4f, -6.5f, -6.6f, -6.7f, -6.7f, -6.8f,
+      -6.8f, -6.9f, -6.9f, -7.0f, -7.0f, -7.0f, -7.0f, -7.0f, -7.0f, -7.0f,
+      -7.0f, -7.0f, -6.9f, -6.9f, -6.9f, -6.8f, -6.8f, -6.7f, -6.7f, -6.6f,
+      -6.5f, -6.5f, -6.4f, -6.3f, -6.2f, -6.2f, -6.1f, -6.0f, -6.0f, -5.9f,
+      -5.8f, -5.8f, -5.7f, -5.6f, -5.6f, -5.5f, -5.5f, -5.4f, -5.3f, -5.3f,
+      -5.2f, -5.1f, -5.1f, -5.0f, -4.9f, -4.9f, -4.8f, -4.7f, -4.6f, -4.6f,
+      -4.5f, -4.4f, -4.3f, -4.2f, -4.1f, -4.0f, -3.8f, -3.7f, -3.6f, -3.4f,
+      -3.3f, -3.1f, -3.0f, -2.8f, -2.6f, -2.4f, -2.3f, -2.1f, -1.9f, -1.7f,
+      -1.6f, -1.4f, -1.2f, -1.1f, -0.9f, -0.8f, -0.7f, -0.5f, -0.4f, -0.3f,
+      -0.2f, -0.2f, -0.1f, -0.1f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f,
+      -0.0f, -0.0f, -0.0f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f,
+      -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f,
+      -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.2f, -0.2f, -0.3f,
+      -0.3f, -0.4f, -0.5f, -0.6f, -0.7f, -0.8f, -0.9f, -1.1f, -1.2f, -1.4f,
+      -1.6f, -1.7f, -1.9f, -2.1f, -2.3f, -2.4f, -2.6f, -2.8f, -2.9f, -3.1f,
+      -3.2f, -3.4f, -3.5f, -3.6f, -3.8f, -3.9f, -4.0f, -4.2f, -4.3f, -4.4f,
+      -4.5f, -4.7f, -4.8f, -4.9f, -5.0f, -5.1f, -5.2f, -5.3f, -5.3f, -5.4f,
+      -5.5f, -5.5f, -5.6f, -5.7f, -5.7f, -5.8f, -5.9f, -5.9f, -6.0f, -6.1f,
+      -6.1f, -6.2f, -6.2f, -6.3f, -6.4f, -6.4f, -6.5f, -6.6f, -6.6f, -6.7f,
+      -6.7f, -6.7f, -6.8f, -6.8f, -6.8f, -6.8f, -6.8f, -6.8f, -6.8f, -6.8};
+  int index = ((phi + M_PI) * 180.0) / M_PI;
+  if (index == 360)
+    index--;
+  return antenna_gain[index];
 }
 
-inline int32_t extractNodeId(std::string context)
-{
-    const std::regex re("/NodeList/([0-9]*)/DeviceList/");
-    std::vector<int32_t> results;
-    for (std::sregex_iterator i =
-             std::sregex_iterator(context.begin(), context.end(), re);
-         i != std::sregex_iterator(); ++i)
-    {
-        std::smatch m = *i;
-        return std::stoi(m[1].str().c_str());
+inline std::string ConvertAddrToString(Address addr) {
+  std::ostringstream stream;
+  stream << addr;
+  std::string str = stream.str();
+  return str;
+}
+
+inline std::string ConvertIpv4AddrToString(Ipv4Address addr) {
+  std::ostringstream stream;
+  stream << addr;
+  std::string str = stream.str();
+  return str;
+}
+
+inline int32_t extractNodeId(std::string context) {
+  const std::regex re("/NodeList/([0-9]*)/DeviceList/");
+  std::vector<int32_t> results;
+  for (std::sregex_iterator i =
+           std::sregex_iterator(context.begin(), context.end(), re);
+       i != std::sregex_iterator(); ++i) {
+    std::smatch m = *i;
+    return std::stoi(m[1].str().c_str());
+  }
+  return -1;
+}
+
+Drone::Drone() {}
+
+void Drone::start() {
+  std::cout << "Lancement du drone " << id << "\n";
+  Simulator::Schedule(Seconds(0.01), &Drone::controller, this, 0.01);
+}
+
+double Drone::magnetometer() {
+  return NodeList::GetNode(id)
+      ->GetObject<ConstantVelocityMobilityModel>()
+      ->GetOrientation()
+      .yaw();
+}
+
+void Drone::controller(double duration) {
+  int angle = constrainAngleDeg((magnetometer() * 180.0 / M_PI));
+  Simulator::Schedule(Seconds(duration), &Drone::controller, this, duration);
+  std::cout << "[" << Simulator::Now().GetSeconds() << "]"
+            << " Controller of drone " << id << " -> " << angle << " -> ["
+            << goal << "]"
+            << "\n";
+
+  for (auto &q : power_histories) {
+    /*
+     * If there is no power curve for the node, we create one which is empty
+     */
+
+    if (power_curves.find(q.first) == power_curves.end()) {
+      power_curves[q.first] = std::vector<double>(360, std::nan(""));
     }
-    return -1;
-}
 
-Drone::Drone()
-{
-}
+    /*
+     * We fill the power curve with the current angle. We assume the angle
+     * didn't change this much since the previous execution of the controller
+     */
+    while (q.second.size() > 0) {
+      if (std::isnan(power_curves[q.first][angle])) {
+        power_curves[q.first][angle] = q.second.front();
+      } else {
+        power_curves[q.first][angle] =
+            (power_curves[q.first][angle] + q.second.front()) / 2.0;
+      }
+      q.second.pop();
+    }
 
-void Drone::start()
-{
-    std::cout << "Lancement du drone " << id << "\n";
-    Simulator::Schedule(Seconds(0.01), &Drone::controller, this,
-                        0.1);
-}
+    /* Printing the content of the power curves */
+   /* std::cout << "Node " << id << "\n";
 
-void Drone::controller(double duration)
-{
-    Simulator::Schedule(Seconds(duration), &Drone::controller, this, duration);
-    std::cout << "[" << Simulator::Now().GetSeconds() << "]"
-              << " Controller of drone " << id << "\n";
+    for (auto &q : power_curves) {
+      for (auto x : q.second) {
+        std::cout << x << ", ";
+      }
+      std::cout << "\n";
+    }*/
+  }
 
+  this->angle = angle;
+
+  /* Voisinage considéré */
+  int radius = window / 2;
+  int min_limit = angle - radius;
+  int max_limit = angle + radius;
+
+  /* Find the first angle where we lack data */
+  int new_angle = angle;
+  bool missing_data = false;
+  bool has_neighbors = false;
+  int missing_agent = -1;
+
+  /* We search missing data close to our current position */
+
+  /* New */
+  for (int i = 0; i < 180; ++i) {
+    for (auto &q : this->power_histories) {
+      has_neighbors = true;
+      if (std::isnan(power_curves[q.first][constrainAngleDeg(angle + i)])) {
+        new_angle = constrainAngleDeg(angle + i);
+        missing_data = true;
+        missing_agent = q.first;
+        break;
+      }
+    }
+
+    if (missing_data)
+      break;
+
+    for (auto &q : this->power_histories) {
+      has_neighbors = true;
+      if (std::isnan(power_curves[q.first][constrainAngleDeg(angle - i)])) {
+        new_angle = constrainAngleDeg(angle - i);
+        missing_data = true;
+        missing_agent = q.first;
+        break;
+      }
+    }
+
+    if (missing_data)
+      break;
+  }
+
+  if (missing_data) {
+    // std::cout << "Node " << this->get_id() << " lacks data on something: "
+    // << missing_agent << " at angle " << new_angle << "\n";
+    goal = new_angle;
+
+    if (new_angle == angle) {
+      timeout += 1;
+    } else {
+      timeout = 0;
+    }
+    if (timeout >= 10) { // We spent 0.1 second at the current angle
+      for (auto &q : power_histories) { // We iterate over all the agents
+        if (std::isnan(power_curves[q.first][new_angle])) {
+          // This agent lacks data for this
+          // angle event if we spernt some
+          // time in the configuration
+          power_curves[q.first][angle] = -100.0;
+        }
+      }
+      timeout = 0;
+    }
+  }
+
+  if (!missing_data && has_neighbors && ((goal == -1) || goal == angle)) {
+    // std::cout << "We have data on everything !\n";
+    double max_val = -10000000;
+    int max_index = angle;
+    // For each angle:
+    for (int i = min_limit; i < max_limit; ++i) {
+      double acc = 0.0;
+      for (auto &q : this->power_histories) {
+        acc += power_curves[q.first][constrainAngleDeg(i)];
+      }
+      power_curve[constrainAngleDeg(i)] = acc;
+      if (acc >= max_val) {
+        max_index = constrainAngleDeg(i);
+        max_val = acc;
+      }
+    }
+    new_angle = max_index;
+    window = window / 2;
+
+    // this->generic_store["range"]->set(window);
+    goal = new_angle;
+  }
+
+  if (has_neighbors) {
+    if (angle != goal) {
+      last_change = Simulator::Now().GetSeconds();
+      if (goal > angle) {
+        if ((goal - angle) > 180) {
+          // std::cout << "We move right\n";
+          NodeList::GetNode(id)
+              ->GetObject<ConstantVelocityMobilityModel>()
+              ->SetAngularVelocity(Vector(0.0, 0.0, -0.50));
+        } else {
+          // std::cout << "We move left\n";
+          NodeList::GetNode(id)
+              ->GetObject<ConstantVelocityMobilityModel>()
+              ->SetAngularVelocity(Vector(0.0, 0.0, 0.50));
+        }
+      } else {
+        if ((angle - goal) > 180) {
+          // std::cout << "We move left\n";
+          NodeList::GetNode(id)
+              ->GetObject<ConstantVelocityMobilityModel>()
+              ->SetAngularVelocity(Vector(0.0, 0.0, 0.50));
+        } else {
+          // std::cout << "We move right\n";
+          NodeList::GetNode(id)
+              ->GetObject<ConstantVelocityMobilityModel>()
+              ->SetAngularVelocity(Vector(0.0, 0.0, -0.50));
+        }
+      }
+    } else {
+      // std::cout << "Already there!\n";
+      NodeList::GetNode(id)
+          ->GetObject<ConstantVelocityMobilityModel>()
+          ->SetAngularVelocity(Vector(0.0, 0.0, 0.0));
+    }
+  }
+
+  if (!has_neighbors) {
+    NodeList::GetNode(id)
+        ->GetObject<ConstantVelocityMobilityModel>()
+        ->SetAngularVelocity(Vector(0.0, 0.0, 0.50));
+  }
+
+  /*
     Ptr<Node> node = NodeList::GetNode(id);
-    Ptr<ConstantVelocityMobilityModel> mob = node->GetObject<ConstantVelocityMobilityModel>();
+    Ptr<ConstantVelocityMobilityModel> mob =
+        node->GetObject<ConstantVelocityMobilityModel>();
     Quaternion orientation = mob->GetOrientation();
     std::cout << "[" << Simulator::Now().GetSeconds() << "]"
-              << " Currant yaw for drone " << id << " : " << orientation.yaw() << "\n";
+              << " Current yaw for drone " << id << " : " << orientation.yaw()
+              << "\n";
     std::cout << "[" << Simulator::Now().GetSeconds() << "]"
-              << " Currant pitch for drone " << id << " : " << orientation.pitch() << "\n";
+              << " Current pitch for drone " << id << " : " <<
+    orientation.pitch()
+              << "\n";
     std::cout << "[" << Simulator::Now().GetSeconds() << "]"
-              << " Currant roll for drone " << id << " : " << orientation.roll() << "\n";
-    std::cout << orientation << "\n";
-    orientation.normalize();
-    std::cout << orientation << "\n";
+              << " Current roll for drone " << id << " : " << orientation.roll()
+              << "\n";
+    std::cout << (mob->GetOrientation()) << "\n";
+    std::cout << "'" << (mob->GetAngularVelocity()) << "'\n"; */
 }
 
-Simulation::Simulation()
-{
-}
+Simulation::Simulation() {}
 
-void Simulation::set_id(int32_t simulation_id)
-{
-    this->simulation_id = simulation_id;
+void Simulation::set_id(int32_t simulation_id) {
+  this->simulation_id = simulation_id;
 }
 
 const int32_t Simulation::get_id() { return this->simulation_id; }
 
-void Simulation::createNodeMap()
-{
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-    {
-        Ptr<Node> node = NodeList::GetNode(i);
-        for (uint32_t j = 0; j < node->GetNDevices(); ++j)
-        {
-            if (ConvertAddrToString(node->GetDevice(j)->GetAddress()) !=
-                "03-06-00:00:00:00:00:00")
-            {
-                this->nodes.insert(std::pair<std::string, uint32_t>(
-                    ConvertAddrToString(node->GetDevice(j)->GetAddress()),
-                    node->GetId()));
-            }
-        }
+void Simulation::createNodeMap() {
+  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    Ptr<Node> node = NodeList::GetNode(i);
+    for (uint32_t j = 0; j < node->GetNDevices(); ++j) {
+      if (ConvertAddrToString(node->GetDevice(j)->GetAddress()) !=
+          "03-06-00:00:00:00:00:00") {
+        this->nodes.insert(std::pair<std::string, uint32_t>(
+            ConvertAddrToString(node->GetDevice(j)->GetAddress()),
+            node->GetId()));
+      }
     }
+  }
 }
 
-PacketInfo Simulation::getPacketInfo(Ptr<Packet> p)
-{
-    PacketInfo packetInfo;
-    Mac48Address Addr1 = Mac48Address();
-    Mac48Address Addr2 = Mac48Address();
-    Mac48Address Addr3 = Mac48Address();
-    Mac48Address Addr4 = Mac48Address();
+PacketInfo Simulation::getPacketInfo(Ptr<Packet> p) {
+  PacketInfo packetInfo;
+  Mac48Address Addr1 = Mac48Address();
+  Mac48Address Addr2 = Mac48Address();
+  Mac48Address Addr3 = Mac48Address();
+  Mac48Address Addr4 = Mac48Address();
 
-    PacketMetadata::ItemIterator i = p->BeginItem();
-    while (i.HasNext())
-    {
-        PacketMetadata::Item item = i.Next();
-        if (!item.isFragment)
-        {
-            switch (item.type)
-            {
-            case PacketMetadata::Item::PAYLOAD:
-                break;
-            case PacketMetadata::Item::HEADER:
-            case PacketMetadata::Item::TRAILER:
-                if (item.tid.GetName() == "ns3::WifiMacHeader")
-                {
-                    Callback<ObjectBase *> constructor = item.tid.GetConstructor();
-                    NS_ASSERT(!constructor.IsNull());
-                    // Ptr<> and DynamicCast<> won't work here as all headers are from
-                    // ObjectBase, not Object
-                    ObjectBase *instance = constructor();
-                    NS_ASSERT(instance != 0);
-                    WifiMacHeader *wifiMacHeader =
-                        dynamic_cast<WifiMacHeader *>(instance);
-                    NS_ASSERT(wifiMacHeader != 0);
-                    wifiMacHeader->Deserialize(item.current);
-                    if (wifiMacHeader->IsData() && wifiMacHeader->HasData())
-                    {
-                        packetInfo.data_type = 0;
-                    }
-                    else if (wifiMacHeader->IsAck() or wifiMacHeader->IsBlockAck())
-                    {
-                        packetInfo.data_type = 1;
-                    }
-                    else
-                    {
-                        packetInfo.data_type = 99;
-                    }
-                    Addr1 = wifiMacHeader->GetAddr1();
-                    Addr2 = wifiMacHeader->GetAddr2();
-                    Addr3 = wifiMacHeader->GetAddr3();
-                    Addr4 = wifiMacHeader->GetAddr4();
-                }
-                break;
-            }
+  PacketMetadata::ItemIterator i = p->BeginItem();
+  while (i.HasNext()) {
+    PacketMetadata::Item item = i.Next();
+    if (!item.isFragment) {
+      switch (item.type) {
+      case PacketMetadata::Item::PAYLOAD:
+        break;
+      case PacketMetadata::Item::HEADER:
+      case PacketMetadata::Item::TRAILER:
+        if (item.tid.GetName() == "ns3::WifiMacHeader") {
+          Callback<ObjectBase *> constructor = item.tid.GetConstructor();
+          NS_ASSERT(!constructor.IsNull());
+          // Ptr<> and DynamicCast<> won't work here as all headers are from
+          // ObjectBase, not Object
+          ObjectBase *instance = constructor();
+          NS_ASSERT(instance != 0);
+          WifiMacHeader *wifiMacHeader =
+              dynamic_cast<WifiMacHeader *>(instance);
+          NS_ASSERT(wifiMacHeader != 0);
+          wifiMacHeader->Deserialize(item.current);
+          if (wifiMacHeader->IsData() && wifiMacHeader->HasData()) {
+            packetInfo.data_type = 0;
+          } else if (wifiMacHeader->IsAck() or wifiMacHeader->IsBlockAck()) {
+            packetInfo.data_type = 1;
+          } else {
+            packetInfo.data_type = 99;
+          }
+          Addr1 = wifiMacHeader->GetAddr1();
+          Addr2 = wifiMacHeader->GetAddr2();
+          Addr3 = wifiMacHeader->GetAddr3();
+          Addr4 = wifiMacHeader->GetAddr4();
         }
+        break;
+      }
     }
-    if (this->nodes.count(ConvertAddrToString(Addr1)) != 0)
-    {
-        packetInfo.addr1 = this->nodes[ConvertAddrToString(Addr1)];
-    }
-    else
-    {
-        packetInfo.addr1 = -1;
-    }
-    if (this->nodes.count(ConvertAddrToString(Addr2)) != 0)
-    {
-        packetInfo.addr2 = this->nodes[ConvertAddrToString(Addr2)];
-    }
-    else
-    {
-        packetInfo.addr2 = -1;
-    }
-    if (this->nodes.count(ConvertAddrToString(Addr3)) != 0)
-    {
-        packetInfo.addr3 = this->nodes[ConvertAddrToString(Addr3)];
-    }
-    else
-    {
-        packetInfo.addr3 = -1;
-    }
-    if (this->nodes.count(ConvertAddrToString(Addr4)) != 0)
-    {
-        packetInfo.addr4 = this->nodes[ConvertAddrToString(Addr4)];
-    }
-    else
-    {
-        packetInfo.addr4 = -1;
-    }
+  }
+  if (this->nodes.count(ConvertAddrToString(Addr1)) != 0) {
+    packetInfo.addr1 = this->nodes[ConvertAddrToString(Addr1)];
+  } else {
+    packetInfo.addr1 = -1;
+  }
+  if (this->nodes.count(ConvertAddrToString(Addr2)) != 0) {
+    packetInfo.addr2 = this->nodes[ConvertAddrToString(Addr2)];
+  } else {
+    packetInfo.addr2 = -1;
+  }
+  if (this->nodes.count(ConvertAddrToString(Addr3)) != 0) {
+    packetInfo.addr3 = this->nodes[ConvertAddrToString(Addr3)];
+  } else {
+    packetInfo.addr3 = -1;
+  }
+  if (this->nodes.count(ConvertAddrToString(Addr4)) != 0) {
+    packetInfo.addr4 = this->nodes[ConvertAddrToString(Addr4)];
+  } else {
+    packetInfo.addr4 = -1;
+  }
 
-    return packetInfo;
+  return packetInfo;
 }
 
 void Simulation::ThroughputMonitor(flowsdata_t &flows,
                                    FlowMonitorHelper *fmHelper,
-                                   Ptr<FlowMonitor> flowMon)
-{
-    float duration = 1.0;
-    flowMon->CheckForLostPackets();
-    Ptr<Ipv4FlowClassifier> classifier =
-        DynamicCast<Ipv4FlowClassifier>(fmHelper->GetClassifier());
-    FlowMonitor::FlowStatsContainer stats = flowMon->GetFlowStats();
+                                   Ptr<FlowMonitor> flowMon) {
+  float duration = 1.0;
+  flowMon->CheckForLostPackets();
+  Ptr<Ipv4FlowClassifier> classifier =
+      DynamicCast<Ipv4FlowClassifier>(fmHelper->GetClassifier());
+  FlowMonitor::FlowStatsContainer stats = flowMon->GetFlowStats();
 
-    std::map<int, flowdata_t> instantflows;
+  std::map<int, flowdata_t> instantflows;
 
-    for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i =
-             stats.begin();
-         i != stats.end(); ++i)
-    {
-        Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow(i->first);
-        instantflows[i->first] = std::make_tuple(
-            ConvertIpv4AddrToString(t.sourceAddress),
-            ConvertIpv4AddrToString(t.destinationAddress), i->second.txPackets,
-            i->second.txBytes, i->second.rxPackets, i->second.rxBytes);
-        if (flows.begin() != flows.end())
-        {
-            if (flows.back().second.find(i->first) != flows.back().second.end())
-            {
-                if (t.destinationPort == 1337)
-                    continue;
-                std::cout << "continuous"
-                          << "," << Simulator::Now().GetSeconds() << "," << i->first
-                          << "," << std::get<0>(flows.back().second[i->first]) << ","
-                          << std::get<1>(flows.back().second[i->first]) << ","
-                          << std::get<2>(instantflows[i->first]) -
-                                 std::get<2>(flows.back().second[i->first])
-                          << ","
-                          << ((float)(std::get<3>(instantflows[i->first]) -
-                                      std::get<3>(flows.back().second[i->first])))
-                          << ","
-                          << std::get<4>(instantflows[i->first]) -
-                                 std::get<4>(flows.back().second[i->first])
-                          << ","
-                          << ((float)(std::get<5>(instantflows[i->first]) -
-                                      std::get<5>(flows.back().second[i->first])))
-                          << "\n";
-            }
-        }
+  for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i =
+           stats.begin();
+       i != stats.end(); ++i) {
+    Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow(i->first);
+    instantflows[i->first] = std::make_tuple(
+        ConvertIpv4AddrToString(t.sourceAddress),
+        ConvertIpv4AddrToString(t.destinationAddress), i->second.txPackets,
+        i->second.txBytes, i->second.rxPackets, i->second.rxBytes);
+    if (flows.begin() != flows.end()) {
+      if (flows.back().second.find(i->first) != flows.back().second.end()) {
+        if (t.destinationPort == 1337)
+          continue;
+        std::cout << "continuous"
+                  << "," << Simulator::Now().GetSeconds() << "," << i->first
+                  << "," << std::get<0>(flows.back().second[i->first]) << ","
+                  << std::get<1>(flows.back().second[i->first]) << ","
+                  << std::get<2>(instantflows[i->first]) -
+                         std::get<2>(flows.back().second[i->first])
+                  << ","
+                  << ((float)(std::get<3>(instantflows[i->first]) -
+                              std::get<3>(flows.back().second[i->first])))
+                  << ","
+                  << std::get<4>(instantflows[i->first]) -
+                         std::get<4>(flows.back().second[i->first])
+                  << ","
+                  << ((float)(std::get<5>(instantflows[i->first]) -
+                              std::get<5>(flows.back().second[i->first])))
+                  << "\n";
+      }
     }
-    flows.push_back(std::make_pair(Simulator::Now().GetSeconds(), instantflows));
-    Simulator::Schedule(Seconds(duration), &Simulation::ThroughputMonitor, this,
-                        flows, fmHelper, flowMon);
+  }
+  flows.push_back(std::make_pair(Simulator::Now().GetSeconds(), instantflows));
+  Simulator::Schedule(Seconds(duration), &Simulation::ThroughputMonitor, this,
+                      flows, fmHelper, flowMon);
 }
 
 void Simulation::ThroughputMonitorFirst(flowsdata_t &flows,
                                         FlowMonitorHelper *fmHelper,
-                                        Ptr<FlowMonitor> flowMon)
-{
-    std::cout << "continuous,Time,Flow,Source Address,Destination Address,Tx "
-                 "Packets,Tx Bytes,Rx Packets,Rx Bytes\n";
-    this->ThroughputMonitor(flows, fmHelper, flowMon);
+                                        Ptr<FlowMonitor> flowMon) {
+  std::cout << "continuous,Time,Flow,Source Address,Destination Address,Tx "
+               "Packets,Tx Bytes,Rx Packets,Rx Bytes\n";
+  this->ThroughputMonitor(flows, fmHelper, flowMon);
 }
 
-void Simulation::DevMonitorSnifferRx(std::string nodeIdStr,
-                                     Ptr<const Packet> packet,
-                                     uint16_t channelFreqMhz,
-                                     WifiTxVector txVector,
-                                     struct MpduInfo aMpdu,
-                                     struct SignalNoiseDbm signalNoise,
-                                     uint16_t staId)
-{
-    int32_t source_agent_id = -1;
-    int32_t destination_agent_id = -1;
-    double rxPower = 0.0;
+void Simulation::DevMonitorSnifferRx(
+    std::string nodeIdStr, Ptr<const Packet> packet, uint16_t channelFreqMhz,
+    WifiTxVector txVector, struct MpduInfo aMpdu,
+    struct SignalNoiseDbm signalNoise, uint16_t staId) {
+  int32_t source_agent_id = -1;
+  int32_t destination_agent_id = -1;
+  double rxPower = 0.0;
 
-    int32_t node = extractNodeId(nodeIdStr);
-    if ((aMpdu.type == NORMAL_MPDU) || (aMpdu.type == SINGLE_MPDU) ||
-        (aMpdu.type == FIRST_MPDU_IN_AGGREGATE))
-    {
+  int32_t node = extractNodeId(nodeIdStr);
+  if ((aMpdu.type == NORMAL_MPDU) || (aMpdu.type == SINGLE_MPDU) ||
+      (aMpdu.type == FIRST_MPDU_IN_AGGREGATE)) {
 
-        Ptr<Packet> copy = packet->Copy();
-        PacketInfo packetInfo = this->getPacketInfo(copy);
+    Ptr<Packet> copy = packet->Copy();
+    PacketInfo packetInfo = this->getPacketInfo(copy);
 
-        // MonitorQuery monitor_query = MonitorQuery();
+    // MonitorQuery monitor_query = MonitorQuery();
 
-        if (packetInfo.data_type == 0)
-        { /* Data Frame */
-            if ((int)node != packetInfo.addr1)
-            {
-                return;
-            }
-            else
-            {
-                source_agent_id = packetInfo.addr2;
-            }
+    if (packetInfo.data_type == 0) { /* Data Frame */
+      if ((int)node != packetInfo.addr1) {
+        return;
+      } else {
+        source_agent_id = packetInfo.addr2;
+      }
+    } else if (packetInfo.data_type == 1) { /* Ack Frame */
+      if ((int)node == packetInfo.addr1) {  /* Ack Frame for Me */
+        if (drones[node].last_transmitted != -1) {
+          source_agent_id = drones[node].last_transmitted;
+        } else {
+          return;
         }
-        else if (packetInfo.data_type == 1)
-        { /* Ack Frame */
-            if ((int)node == packetInfo.addr1)
-            { /* Ack Frame for Me */
-                if (drones[node].last_transmitted != -1)
-                {
-                    source_agent_id = drones[node].last_transmitted;
-                }
-                else
-                {
-                    return;
-                }
-            }
-            else
-            { /* Ack Frame not for Me */
-                return;
-            }
-        }
-        else
-        {
-            /* std::cout << "Non ack / data packet, ignoring.\n"; */
-            return;
-        }
-        destination_agent_id = node;
-        /* monitor_query.set_clock(Simulator::Now().GetSeconds());
-    monitor_query.set_dest_agent_id(node);
-    if (monitor_query.source_agent_id() == monitor_query.dest_agent_id()) {
-      std::cout << monitor_query.source_agent_id() << " -> "
-                << monitor_query.dest_agent_id() << "\n";
-      std::cout << "fuckery\n"; 
-    }*/
-        if (drones[node].power_histories.find(source_agent_id) == drones[node].power_histories.end())
-        {
-            FixedQueue<double, 64> queue;
-            drones[node].power_histories[source_agent_id] = queue;
-        }
-        drones[node].power_histories[source_agent_id].push(signalNoise.signal);
+      } else { /* Ack Frame not for Me */
+        return;
+      }
+    } else {
+      /* std::cout << "Non ack / data packet, ignoring.\n"; */
+      return;
     }
+    destination_agent_id = node;
+    /* monitor_query.set_clock(Simulator::Now().GetSeconds());
+monitor_query.set_dest_agent_id(node);
+if (monitor_query.source_agent_id() == monitor_query.dest_agent_id()) {
+  std::cout << monitor_query.source_agent_id() << " -> "
+            << monitor_query.dest_agent_id() << "\n";
+  std::cout << "fuckery\n";
+}*/
+    if (drones[node].power_histories.find(source_agent_id) ==
+        drones[node].power_histories.end()) {
+      FixedQueue<double, 64> queue;
+      drones[node].power_histories[source_agent_id] = queue;
+    }
+    drones[node].power_histories[source_agent_id].push(signalNoise.signal);
+  }
 }
 
 void Simulation::DevMonitorSnifferTx(std::string nodeIdStr,
                                      Ptr<const Packet> packet,
                                      uint16_t channelFreqMhz,
                                      WifiTxVector txVector,
-                                     struct MpduInfo aMpdu,
-                                     uint16_t staId)
-{
-    uint32_t node = extractNodeId(nodeIdStr);
-    if ((aMpdu.type == NORMAL_MPDU) || (aMpdu.type == SINGLE_MPDU) ||
-        (aMpdu.type == FIRST_MPDU_IN_AGGREGATE))
-    {
-        Ptr<Packet> copy = packet->Copy();
-        PacketInfo packetInfo = this->getPacketInfo(copy);
-        if (packetInfo.data_type == 0)
-        { /* Data Frame */
-            if (packetInfo.addr1 != -1)
-            {
-                drones[node].last_transmitted = packetInfo.addr1;
-            }
-        }
-        else if (packetInfo.data_type == 1)
-        { /* Ack */
-        }
-        else
-        { /* Something else I send */
-        }
+                                     struct MpduInfo aMpdu, uint16_t staId) {
+  uint32_t node = extractNodeId(nodeIdStr);
+  if ((aMpdu.type == NORMAL_MPDU) || (aMpdu.type == SINGLE_MPDU) ||
+      (aMpdu.type == FIRST_MPDU_IN_AGGREGATE)) {
+    Ptr<Packet> copy = packet->Copy();
+    PacketInfo packetInfo = this->getPacketInfo(copy);
+    if (packetInfo.data_type == 0) { /* Data Frame */
+      if (packetInfo.addr1 != -1) {
+        drones[node].last_transmitted = packetInfo.addr1;
+      }
+    } else if (packetInfo.data_type == 1) { /* Ack */
+    } else {                                /* Something else I send */
     }
+  }
 }
 
-void Simulation::MacTx(std::string nodeIdStr, Ptr<const Packet> packet)
-{
-    uint32_t node = extractNodeId(nodeIdStr);
-    if (this->macTx.count(node))
-    {
-        this->macTx[node]++;
-    }
-    else
-    {
-        this->macTx[node] = 1;
-    }
+void Simulation::MacTx(std::string nodeIdStr, Ptr<const Packet> packet) {
+  uint32_t node = extractNodeId(nodeIdStr);
+  if (this->macTx.count(node)) {
+    this->macTx[node]++;
+  } else {
+    this->macTx[node] = 1;
+  }
 }
 
-void Simulation::MacTxDataFailed(std::string nodeIdStr, ns3::Mac48Address addr)
-{
-    uint32_t node = extractNodeId(nodeIdStr);
-    if (this->macTxDataFailed.count(node))
-    {
-        this->macTxDataFailed[node]++;
-    }
-    else
-    {
-        this->macTxDataFailed[node] = 1;
-    }
+void Simulation::MacTxDataFailed(std::string nodeIdStr,
+                                 ns3::Mac48Address addr) {
+  uint32_t node = extractNodeId(nodeIdStr);
+  if (this->macTxDataFailed.count(node)) {
+    this->macTxDataFailed[node]++;
+  } else {
+    this->macTxDataFailed[node] = 1;
+  }
 }
 
 void Simulation::init(std::vector<std::string> agent_types, int agent_number,
-                      double simulationTime, ScenarioType scenarioType)
-{
-    this->simulationTime = simulationTime;
-    this->wifiNodes.Create(agent_number);
-    this->scenarioType = scenarioType;
+                      double simulationTime, ScenarioType scenarioType) {
+  this->simulationTime = simulationTime;
+  this->wifiNodes.Create(agent_number);
+  this->scenarioType = scenarioType;
 
-    std::string message;
-    /* Init Query */
-    /* InitQuery init_query = InitQuery();
-  init_query.set_agent_number(NodeList::GetNNodes()); */
+  std::string message;
+  /* Init Query */
+  /* InitQuery init_query = InitQuery();
+init_query.set_agent_number(NodeList::GetNNodes()); */
 
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-    {
-        std::cout << "Hello\n";
-        Ptr<Node> node = NodeList::GetNode(i);
+  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    std::cout << "Hello\n";
+    Ptr<Node> node = NodeList::GetNode(i);
 
-        /* Create a Drone object associated to the node */
-        drones[node->GetId()] = Drone();
-        drones[node->GetId()].id = node->GetId();
-        drones[node->GetId()].start();
-        /* String representing the type of the Agent */
-        // init_query.add_agent_type(agent_types[i]);
-        /* Id of the Agent */
-        // init_query.add_agent_id(node->GetId());
-    }
-    /* MetaSend(init_query, phi::Meta_MessageType_INIT_QUERY, this->zmq_socket);
-  Meta meta = MetaRecv(phi::Meta_MessageType_INIT_ANSWER, this->zmq_socket);
-  InitAnswer init_answer = InitAnswer();
-  init_answer.ParseFromString(meta.content());
-  this->set_id(init_answer.simulation_id()); */
+    /* Create a Drone object associated to the node */
+    drones[node->GetId()] = Drone();
+    drones[node->GetId()].id = node->GetId();
+    drones[node->GetId()].start();
+    /* String representing the type of the Agent */
+    // init_query.add_agent_type(agent_types[i]);
+    /* Id of the Agent */
+    // init_query.add_agent_id(node->GetId());
+  }
 }
 
 void Simulation::configureMobility(Ptr<ListPositionAllocator> positionAlloc,
-                                   Ptr<UniformRandomVariable> randomVariable)
-{
+                                   Ptr<UniformRandomVariable> randomVariable) {
 
-    MobilityHelper mobility;
-    mobility.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
-    mobility.Install(wifiNodes);
+  MobilityHelper mobility;
+  mobility.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
+  mobility.Install(wifiNodes);
 
-    /* Actually set up the positions */
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-    {
-        Ptr<ConstantVelocityMobilityModel> mob =
-            NodeList::GetNode(i)->GetObject<ConstantVelocityMobilityModel>();
-        mob->SetPosition(positionAlloc->GetNext());
-    }
+  /* Actually set up the positions */
+  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    Ptr<ConstantVelocityMobilityModel> mob =
+        NodeList::GetNode(i)->GetObject<ConstantVelocityMobilityModel>();
+    mob->SetPosition(positionAlloc->GetNext());
+  }
 
-    /* Set up the nodes initial orientations */
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-    {
-        Ptr<ConstantVelocityMobilityModel> mob =
-            NodeList::GetNode(i)->GetObject<ConstantVelocityMobilityModel>();
-        double random_angle = randomVariable->GetValue() * 2 * M_PI /
-                              (randomVariable->GetMax() - randomVariable->GetMin());
+  /* Set up the nodes initial orientations */
+  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    Ptr<ConstantVelocityMobilityModel> mob =
+        NodeList::GetNode(i)->GetObject<ConstantVelocityMobilityModel>();
+    double random_angle = randomVariable->GetValue() * 2 * M_PI /
+                          (randomVariable->GetMax() - randomVariable->GetMin());
 
-        /* FIXME: glm::dquat orientation = glm::dquat(glm::dvec3(0.0f, 0.0f, random_angle));
-    mob->SetOrientation(orientation); */
-        NodeList::GetNode(i)->GetObject<ConstantVelocityMobilityModel>()->SetAngularVelocity(Vector(0.0, 0.0, 0.08));
-    }
+    /* FIXME: glm::dquat orientation = glm::dquat(glm::dvec3(0.0f, 0.0f,
+random_angle)); mob->SetOrientation(orientation); */
+    Quaternion random_orientation = Quaternion(random_angle, Vector(0, 0, 1));
 
-    std::cout
-        << "initialpositions,agent_id,position_x,position_y,position_z,"
-           "orientation_x,orientation_y,orientation_z,orientation_w,angle\n";
+    NodeList::GetNode(i)
+        ->GetObject<ConstantVelocityMobilityModel>()
+        ->SetOrientation(random_orientation);
+    NodeList::GetNode(i)
+        ->GetObject<ConstantVelocityMobilityModel>()
+        ->SetAngularVelocity(Vector(0.0, 0.0, 0.0));
+  }
 
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-    {
-        Ptr<Node> node = NodeList::GetNode(i);
-        Ptr<ConstantVelocityMobilityModel> mob = node->GetObject<ConstantVelocityMobilityModel>();
-        Vector position = mob->GetPosition();
-        /* glm::dquat orientation = mob->GetOrientation();
-        std::cout << "initialpositions"
-                  << "," << node->GetId() << "," << position.x << "," << position.y
-                  << "," << position.z << "," << orientation.x << ","
-                  << orientation.y << "," << orientation.z << "," << orientation.w
-                  << "," << glm::degrees(glm::roll(orientation)) << "\n"; */
-    }
+  std::cout
+      << "initialpositions,agent_id,position_x,position_y,position_z,"
+         "orientation_x,orientation_y,orientation_z,orientation_w,angle\n";
+
+  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    Ptr<Node> node = NodeList::GetNode(i);
+    Ptr<ConstantVelocityMobilityModel> mob =
+        node->GetObject<ConstantVelocityMobilityModel>();
+    Vector position = mob->GetPosition();
+    /* glm::dquat orientation = mob->GetOrientation();
+    std::cout << "initialpositions"
+              << "," << node->GetId() << "," << position.x << "," << position.y
+              << "," << position.z << "," << orientation.x << ","
+              << orientation.y << "," << orientation.z << "," << orientation.w
+              << "," << glm::degrees(glm::roll(orientation)) << "\n"; */
+  }
 }
 
 void Simulation::configureWifi(bool enablePcap, int channelWidth, int mcs,
-                               bool sgi, std::string wifiManager)
-{
-    this->enablePcap = enablePcap;
-    this->channelWidth = channelWidth;
-    this->mcs = mcs;
-    this->sgi = sgi;
-    this->wifiManager = wifiManager;
+                               bool sgi, std::string wifiManager) {
+  this->enablePcap = enablePcap;
+  this->channelWidth = channelWidth;
+  this->mcs = mcs;
+  this->sgi = sgi;
+  this->wifiManager = wifiManager;
 
-    YansWifiPhyHelper phy = YansWifiPhyHelper();
-    // phy.DisablePreambleDetectionModel();
-    phy.SetPcapDataLinkType(YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
+  YansWifiPhyHelper phy = YansWifiPhyHelper();
+  // phy.DisablePreambleDetectionModel();
+  phy.SetPcapDataLinkType(YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
 
-    YansWifiChannelHelper channel;
-    channel.AddPropagationLoss("ns3::FriisPropagationLossModel");
-    channel.AddPropagationLoss("ns3::AntennaPropagationLossModel");
-    channel.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
-    phy.SetChannel(channel.Create());
+  YansWifiChannelHelper channel;
+  channel.AddPropagationLoss("ns3::FriisPropagationLossModel");
+  channel.AddPropagationLoss("ns3::AntennaPropagationLossModel");
+  channel.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
+  phy.SetChannel(channel.Create());
 
-    WifiHelper wifi;
-    wifi.SetStandard(WIFI_PHY_STANDARD_80211ac);
-    WifiMacHelper mac;
+  WifiHelper wifi;
+  wifi.SetStandard(WIFI_PHY_STANDARD_80211ac);
+  WifiMacHelper mac;
 
-    if (mcs >= 0 && mcs <= 9)
-    {
-        if (mcs == 9 && channelWidth == 20)
-        {
-            std::cout << "MCS 9 and 20 MHZ width is disabled."
-                      << "\n";
-            exit(0);
-        }
-        std::ostringstream oss;
-        oss << "VhtMcs" << mcs;
-        wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager", "DataMode",
-                                     StringValue(oss.str()), "ControlMode",
-                                     StringValue(oss.str()));
+  if (mcs >= 0 && mcs <= 9) {
+    if (mcs == 9 && channelWidth == 20) {
+      std::cout << "MCS 9 and 20 MHZ width is disabled."
+                << "\n";
+      exit(0);
     }
-    else
-    {
-        wifi.SetRemoteStationManager(wifiManager);
-    }
+    std::ostringstream oss;
+    oss << "VhtMcs" << mcs;
+    wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager", "DataMode",
+                                 StringValue(oss.str()), "ControlMode",
+                                 StringValue(oss.str()));
+  } else {
+    wifi.SetRemoteStationManager(wifiManager);
+  }
 
-    Ssid ssid = Ssid("ns3-80211ac");
+  Ssid ssid = Ssid("ns3-80211ac");
 
-    mac.SetType("ns3::AdhocWifiMac");
+  mac.SetType("ns3::AdhocWifiMac");
 
-    this->devices = wifi.Install(phy, mac, this->wifiNodes);
+  this->devices = wifi.Install(phy, mac, this->wifiNodes);
 
-    if (enablePcap)
-    {
-        phy.EnablePcap("STA", devices);
-    }
+  if (enablePcap) {
+    phy.EnablePcap("STA", devices);
+  }
 
-    /* Set channel width */
-    Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelWidth",
-                UintegerValue(channelWidth));
+  /* Set channel width */
+  Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelWidth",
+              UintegerValue(channelWidth));
 
-    /* Set guard interval */
-    Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/"
-                "ShortGuardIntervalSupported",
-                BooleanValue(sgi));
+  /* Set guard interval */
+  Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/"
+              "ShortGuardIntervalSupported",
+              BooleanValue(sgi));
 
-    /* Post-install configuration for channel width, guard interval, NSS and Antennas */
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-    {
-        Ptr<NetDevice> nd = devices.Get(i);
-        Ptr<WifiNetDevice> wnd = nd->GetObject<WifiNetDevice>();
-        Ptr<WifiPhy> wp = wnd->GetPhy();
-        wp->SetNumberOfAntennas(2);
-        wp->SetMaxSupportedTxSpatialStreams(2);
-        wp->SetMaxSupportedRxSpatialStreams(2);
+  /* Post-install configuration for channel width, guard interval, NSS and
+   * Antennas */
+  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    Ptr<NetDevice> nd = devices.Get(i);
+    Ptr<WifiNetDevice> wnd = nd->GetObject<WifiNetDevice>();
+    Ptr<WifiPhy> wp = wnd->GetPhy();
+    wp->SetNumberOfAntennas(2);
+    wp->SetMaxSupportedTxSpatialStreams(2);
+    wp->SetMaxSupportedRxSpatialStreams(2);
 
-        Ptr<CustomAntennaModel> apAntenna = CreateObject<CustomAntennaModel>();
-        apAntenna->SetModel(custom_antenna_model);
-        apAntenna->Install(NodeList::GetNode(i));
-    }
+    Ptr<CustomAntennaModel> apAntenna = CreateObject<CustomAntennaModel>();
+    apAntenna->SetModel(custom_antenna_model);
+    apAntenna->Install(NodeList::GetNode(i));
+  }
 }
 
-void Simulation::configureTraces()
-{
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-    {
-        Config::Connect(
-            "/NodeList/" + std::to_string(i) +
-                "/DeviceList/*/$ns3::WifiNetDevice/Phy/MonitorSnifferRx",
-            MakeCallback(&Simulation::DevMonitorSnifferRx, this));
-        Config::Connect(
-            "/NodeList/" + std::to_string(i) +
-                "/DeviceList/*/$ns3::WifiNetDevice/Phy/MonitorSnifferTx",
-            MakeCallback(&Simulation::DevMonitorSnifferTx, this));
+void Simulation::configureTraces() {
+  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    Config::Connect(
+        "/NodeList/" + std::to_string(i) +
+            "/DeviceList/*/$ns3::WifiNetDevice/Phy/MonitorSnifferRx",
+        MakeCallback(&Simulation::DevMonitorSnifferRx, this));
+    Config::Connect(
+        "/NodeList/" + std::to_string(i) +
+            "/DeviceList/*/$ns3::WifiNetDevice/Phy/MonitorSnifferTx",
+        MakeCallback(&Simulation::DevMonitorSnifferTx, this));
 
-        Config::Connect(
-            "/NodeList/" + std::to_string(i) +
-                "/DeviceList/*/$ns3::WifiNetDevice/RemoteStationManager/MacTxDataFailed",
-            MakeCallback(&Simulation::MacTxDataFailed, this));
+    Config::Connect("/NodeList/" + std::to_string(i) +
+                        "/DeviceList/*/$ns3::WifiNetDevice/"
+                        "RemoteStationManager/MacTxDataFailed",
+                    MakeCallback(&Simulation::MacTxDataFailed, this));
 
-        Config::Connect(
-            "/NodeList/" + std::to_string(i) +
-                "/DeviceList/*/$ns3::WifiNetDevice/Mac/MacTx",
-            MakeCallback(&Simulation::MacTx, this));
+    Config::Connect("/NodeList/" + std::to_string(i) +
+                        "/DeviceList/*/$ns3::WifiNetDevice/Mac/MacTx",
+                    MakeCallback(&Simulation::MacTx, this));
+  }
+}
+
+void Simulation::configureInternet() {
+  InternetStackHelper stack;
+  stack.Install(this->wifiNodes);
+
+  Ipv4AddressHelper address;
+  address.SetBase("192.168.1.0", "255.255.255.0");
+  this->interfaces = address.Assign(this->devices);
+}
+
+void Simulation::configureRouting() {
+  /*   for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    Ptr<Ipv4> ipv4 = wifiNodes.Get(i)->GetObject<Ipv4>();
+    NS_LOG_DEBUG("Node " << i << " has " << ipv4->GetNInterfaces()
+                         << " interfaces:\n");
+    for (uint32_t j = 0; j < ipv4->GetNInterfaces(); ++j) {
+      NS_LOG_DEBUG("\tInterface " << j << " has " << ipv4->GetNAddresses(j)
+                                  << " addresses:\n");
+      for (uint32_t k = 0; k < ipv4->GetNAddresses(j); ++k) {
+        NS_LOG_DEBUG("\t\t" << ipv4->GetAddress(j, k).GetLocal() << "\n");
+      }
     }
-}
+  } */
 
-void Simulation::configureInternet()
-{
-    InternetStackHelper stack;
-    stack.Install(this->wifiNodes);
+  Ipv4StaticRoutingHelper staticRoutingHelper;
 
-    Ipv4AddressHelper address;
-    address.SetBase("192.168.1.0", "255.255.255.0");
-    this->interfaces = address.Assign(this->devices);
-}
-
-void Simulation::configureRouting()
-{
-    /*   for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+  if ((this->scenarioType == SIMPLE) || (this->scenarioType == CHAIN)) {
+    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
       Ptr<Ipv4> ipv4 = wifiNodes.Get(i)->GetObject<Ipv4>();
-      NS_LOG_DEBUG("Node " << i << " has " << ipv4->GetNInterfaces()
-                           << " interfaces:\n");
-      for (uint32_t j = 0; j < ipv4->GetNInterfaces(); ++j) {
-        NS_LOG_DEBUG("\tInterface " << j << " has " << ipv4->GetNAddresses(j)
-                                    << " addresses:\n");
-        for (uint32_t k = 0; k < ipv4->GetNAddresses(j); ++k) {
-          NS_LOG_DEBUG("\t\t" << ipv4->GetAddress(j, k).GetLocal() << "\n");
+      Ptr<Ipv4StaticRouting> staticRouting =
+          staticRoutingHelper.GetStaticRouting(ipv4);
+
+      if (i > 0) {
+        staticRouting->AddHostRouteTo(
+            Ipv4Address(("192.168.1." + std::to_string(i)).c_str()), 1);
+
+        for (uint32_t j = 0; j < i - 1; ++j) {
+          staticRouting->AddHostRouteTo(
+              Ipv4Address(("192.168.1." + std::to_string(j + 1)).c_str()),
+              Ipv4Address(("192.168.1." + std::to_string(i)).c_str()), 1);
         }
       }
-    } */
 
-    Ipv4StaticRoutingHelper staticRoutingHelper;
+      for (uint32_t j = i + 2; j < NodeList::GetNNodes(); ++j) {
+        staticRouting->AddHostRouteTo(
+            Ipv4Address(("192.168.1." + std::to_string(j + 1)).c_str()),
+            Ipv4Address(("192.168.1." + std::to_string(i + 2)).c_str()), 1);
+      }
 
-    if ((this->scenarioType == SIMPLE) || (this->scenarioType == CHAIN))
-    {
-        for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-        {
-            Ptr<Ipv4> ipv4 = wifiNodes.Get(i)->GetObject<Ipv4>();
-            Ptr<Ipv4StaticRouting> staticRouting =
-                staticRoutingHelper.GetStaticRouting(ipv4);
-
-            if (i > 0)
-            {
-                staticRouting->AddHostRouteTo(
-                    Ipv4Address(("192.168.1." + std::to_string(i)).c_str()), 1);
-
-                for (uint32_t j = 0; j < i - 1; ++j)
-                {
-                    staticRouting->AddHostRouteTo(
-                        Ipv4Address(("192.168.1." + std::to_string(j + 1)).c_str()),
-                        Ipv4Address(("192.168.1." + std::to_string(i)).c_str()), 1);
-                }
-            }
-
-            for (uint32_t j = i + 2; j < NodeList::GetNNodes(); ++j)
-            {
-                staticRouting->AddHostRouteTo(
-                    Ipv4Address(("192.168.1." + std::to_string(j + 1)).c_str()),
-                    Ipv4Address(("192.168.1." + std::to_string(i + 2)).c_str()), 1);
-            }
-
-            if (i < NodeList::GetNNodes() - 1)
-            {
-                staticRouting->AddHostRouteTo(
-                    Ipv4Address(("192.168.1." + std::to_string(i + 2)).c_str()), 1);
-            }
-        }
+      if (i < NodeList::GetNNodes() - 1) {
+        staticRouting->AddHostRouteTo(
+            Ipv4Address(("192.168.1." + std::to_string(i + 2)).c_str()), 1);
+      }
     }
-    else if (this->scenarioType == SINK)
-    {
-        for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i)
-        {
-            Ptr<Ipv4> ipv4 = wifiNodes.Get(i)->GetObject<Ipv4>();
-            Ptr<Ipv4StaticRouting> staticRouting =
-                staticRoutingHelper.GetStaticRouting(ipv4);
-            staticRouting->AddHostRouteTo(
-                Ipv4Address(("192.168.1." + std::to_string(0 + 1)).c_str()), 1);
-        }
-
-        for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i)
-        {
-            Ptr<Ipv4> ipv4 = wifiNodes.Get(0)->GetObject<Ipv4>();
-            Ptr<Ipv4StaticRouting> staticRouting =
-                staticRoutingHelper.GetStaticRouting(ipv4);
-            staticRouting->AddHostRouteTo(
-                Ipv4Address(("192.168.1." + std::to_string(i + 1)).c_str()), 1);
-        }
+  } else if (this->scenarioType == SINK) {
+    for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i) {
+      Ptr<Ipv4> ipv4 = wifiNodes.Get(i)->GetObject<Ipv4>();
+      Ptr<Ipv4StaticRouting> staticRouting =
+          staticRoutingHelper.GetStaticRouting(ipv4);
+      staticRouting->AddHostRouteTo(
+          Ipv4Address(("192.168.1." + std::to_string(0 + 1)).c_str()), 1);
     }
+
+    for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i) {
+      Ptr<Ipv4> ipv4 = wifiNodes.Get(0)->GetObject<Ipv4>();
+      Ptr<Ipv4StaticRouting> staticRouting =
+          staticRoutingHelper.GetStaticRouting(ipv4);
+      staticRouting->AddHostRouteTo(
+          Ipv4Address(("192.168.1." + std::to_string(i + 1)).c_str()), 1);
+    }
+  }
 }
 
 void Simulation::configureApplications(std::string dataRate, bool udp,
-                                       uint32_t packetSize)
-{
-    this->dataRate = dataRate;
-    this->udp = udp;
-    this->packetSize = packetSize;
+                                       uint32_t packetSize) {
+  this->dataRate = dataRate;
+  this->udp = udp;
+  this->packetSize = packetSize;
 
-    uint32_t payloadSize; // 1500 byte IP packet
-    if (this->udp)
-    {
-        payloadSize = 1472; // bytes
-    }
-    else
-    {
-        payloadSize = 1448; // bytes
-        Config::SetDefault("ns3::TcpSocket::SegmentSize",
-                           UintegerValue(payloadSize));
-    }
+  uint32_t payloadSize; // 1500 byte IP packet
+  if (this->udp) {
+    payloadSize = 1472; // bytes
+  } else {
+    payloadSize = 1448; // bytes
+    Config::SetDefault("ns3::TcpSocket::SegmentSize",
+                       UintegerValue(payloadSize));
+  }
 
-    /* Generate traffic to populate the ARP tables before the start of the
+  /* Generate traffic to populate the ARP tables before the start of the
    * applications */
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-    {
-        uint16_t port = 1337;
-        PacketSinkHelper sink(
-            "ns3::UdpSocketFactory",
-            InetSocketAddress(this->interfaces.GetAddress(i), port));
-        ApplicationContainer serverApp = sink.Install(wifiNodes.Get(i));
-        serverApp.Start(Seconds(0.0));
-        serverApp.Stop(Seconds(1));
+  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    uint16_t port = 1337;
+    PacketSinkHelper sink(
+        "ns3::UdpSocketFactory",
+        InetSocketAddress(this->interfaces.GetAddress(i), port));
+    ApplicationContainer serverApp = sink.Install(wifiNodes.Get(i));
+    serverApp.Start(Seconds(0.0));
+    serverApp.Stop(Seconds(1));
 
-        if (this->scenarioType == CHAIN)
-        {
-            /* Node Before */
-            if (i > 0)
-            {
-                UdpClientHelper client(
-                    InetSocketAddress(this->interfaces.GetAddress(i - 1), port));
-                client.SetAttribute("MaxPackets", UintegerValue(10));
-                client.SetAttribute("Interval", TimeValue(Seconds(.05)));
-                client.SetAttribute("PacketSize", UintegerValue(12));
-
-                ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-                clientApp.Start(Seconds(i * 0.02));
-                clientApp.Stop(Seconds(1));
-            }
-            /* Node After */
-            if (i < NodeList::GetNNodes() - 1)
-            {
-                UdpClientHelper client(
-                    InetSocketAddress(this->interfaces.GetAddress(i + 1), port));
-                client.SetAttribute("MaxPackets", UintegerValue(10));
-                client.SetAttribute("Interval", TimeValue(Seconds(.05)));
-                client.SetAttribute("PacketSize", UintegerValue(12));
-
-                ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-                clientApp.Start(Seconds(i * 0.02));
-                clientApp.Stop(Seconds(1));
-            }
-        }
-        else if ((this->scenarioType == SIMPLE) || (this->scenarioType == SINK))
-        {
-            if (i != 0)
-            {
-                UdpClientHelper client(
-                    InetSocketAddress(this->interfaces.GetAddress(0), port));
-                client.SetAttribute("MaxPackets", UintegerValue(10));
-                client.SetAttribute("Interval", TimeValue(Seconds(.05)));
-                client.SetAttribute("PacketSize", UintegerValue(12));
-
-                ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-                clientApp.Start(Seconds(i * 0.02));
-                clientApp.Stop(Seconds(1));
-            }
-        }
-    }
-
-    /* Broadcast 10 times per second with the neighbours */
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-    {
-        uint16_t port = 9;
-        PacketSinkHelper sink(
-            "ns3::UdpSocketFactory",
-            InetSocketAddress(this->interfaces.GetAddress(i), port));
-        ApplicationContainer serverApp = sink.Install(wifiNodes.Get(i));
-        serverApp.Start(Seconds(0.0 + i * 0.01));
-        serverApp.Stop(Seconds(this->simulationTime + 1));
-
-        UdpClientHelper client(InetSocketAddress(
-            this->interfaces.GetAddress(0).GetSubnetDirectedBroadcast(
-                Ipv4Mask("/24")),
-            port));
-        client.SetAttribute("MaxPackets",
-                            UintegerValue(2 * this->simulationTime * 1 / (0.10)));
-        client.SetAttribute("Interval", TimeValue(Seconds(.10)));
+    if (this->scenarioType == CHAIN) {
+      /* Node Before */
+      if (i > 0) {
+        UdpClientHelper client(
+            InetSocketAddress(this->interfaces.GetAddress(i - 1), port));
+        client.SetAttribute("MaxPackets", UintegerValue(10));
+        client.SetAttribute("Interval", TimeValue(Seconds(.05)));
         client.SetAttribute("PacketSize", UintegerValue(12));
 
         ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-        clientApp.Start(Seconds(1.01 + i * 0.01));
-        clientApp.Stop(Seconds(this->simulationTime + 1));
-    }
+        clientApp.Start(Seconds(i * 0.02));
+        clientApp.Stop(Seconds(1));
+      }
+      /* Node After */
+      if (i < NodeList::GetNNodes() - 1) {
+        UdpClientHelper client(
+            InetSocketAddress(this->interfaces.GetAddress(i + 1), port));
+        client.SetAttribute("MaxPackets", UintegerValue(10));
+        client.SetAttribute("Interval", TimeValue(Seconds(.05)));
+        client.SetAttribute("PacketSize", UintegerValue(12));
 
-    uint16_t port = 1234;
-    std::string socketFactory;
+        ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
+        clientApp.Start(Seconds(i * 0.02));
+        clientApp.Stop(Seconds(1));
+      }
+    } else if ((this->scenarioType == SIMPLE) || (this->scenarioType == SINK)) {
+      if (i != 0) {
+        UdpClientHelper client(
+            InetSocketAddress(this->interfaces.GetAddress(0), port));
+        client.SetAttribute("MaxPackets", UintegerValue(10));
+        client.SetAttribute("Interval", TimeValue(Seconds(.05)));
+        client.SetAttribute("PacketSize", UintegerValue(12));
 
-    if (udp)
-    {
-        socketFactory = "ns3::UdpSocketFactory";
+        ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
+        clientApp.Start(Seconds(i * 0.02));
+        clientApp.Stop(Seconds(1));
+      }
     }
-    else
-    {
-        socketFactory = "ns3::TcpSocketFactory";
-    }
+  }
 
+  /* Broadcast 10 times per second with the neighbours */
+  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    uint16_t port = 9;
     PacketSinkHelper sink(
-        socketFactory, InetSocketAddress(this->interfaces.GetAddress(0), port));
-    this->serverApp = sink.Install(wifiNodes.Get(0));
-    this->serverApp.Start(Seconds(0.0));
-    this->serverApp.Stop(Seconds(this->simulationTime + 1));
+        "ns3::UdpSocketFactory",
+        InetSocketAddress(this->interfaces.GetAddress(i), port));
+    ApplicationContainer serverApp = sink.Install(wifiNodes.Get(i));
+    serverApp.Start(Seconds(0.0 + i * 0.01));
+    serverApp.Stop(Seconds(this->simulationTime + 1));
 
-    if ((this->scenarioType == SIMPLE) || (this->scenarioType == CHAIN))
-    {
-        OnOffHelper onoff(socketFactory,
-                          InetSocketAddress(this->interfaces.GetAddress(0), port));
-        onoff.SetConstantRate(DataRate(this->dataRate), this->packetSize);
-        onoff.SetAttribute("StartTime", TimeValue(Seconds(1.000000)));
-        ApplicationContainer clientApp =
-            onoff.Install(wifiNodes.Get(NodeList::GetNNodes() - 1));
-        clientApp.Start(Seconds(1.0));
-        clientApp.Stop(Seconds(this->simulationTime + 1));
-    }
-    else if (this->scenarioType == SINK)
-    {
-        for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i)
-        {
+    UdpClientHelper client(InetSocketAddress(
+        this->interfaces.GetAddress(0).GetSubnetDirectedBroadcast(
+            Ipv4Mask("/24")),
+        port));
+    client.SetAttribute("MaxPackets",
+                        UintegerValue(2 * this->simulationTime * 1 / (0.10)));
+    client.SetAttribute("Interval", TimeValue(Seconds(.10)));
+    client.SetAttribute("PacketSize", UintegerValue(12));
 
-            OnOffHelper onoff(
-                socketFactory,
-                InetSocketAddress(this->interfaces.GetAddress(0), port));
-            onoff.SetConstantRate(DataRate(dataRate), this->packetSize);
-            onoff.SetAttribute("StartTime", TimeValue(Seconds(1.0)));
-            ApplicationContainer clientApp = onoff.Install(wifiNodes.Get(i));
-            clientApp.Start(Seconds(1.0));
-            clientApp.Stop(Seconds(simulationTime + 1));
-        }
+    ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
+    clientApp.Start(Seconds(1.01 + i * 0.01));
+    clientApp.Stop(Seconds(this->simulationTime + 1));
+  }
+
+  uint16_t port = 1234;
+  std::string socketFactory;
+
+  if (udp) {
+    socketFactory = "ns3::UdpSocketFactory";
+  } else {
+    socketFactory = "ns3::TcpSocketFactory";
+  }
+
+  PacketSinkHelper sink(
+      socketFactory, InetSocketAddress(this->interfaces.GetAddress(0), port));
+  this->serverApp = sink.Install(wifiNodes.Get(0));
+  this->serverApp.Start(Seconds(0.0));
+  this->serverApp.Stop(Seconds(this->simulationTime + 1));
+
+  if ((this->scenarioType == SIMPLE) || (this->scenarioType == CHAIN)) {
+    OnOffHelper onoff(socketFactory,
+                      InetSocketAddress(this->interfaces.GetAddress(0), port));
+    onoff.SetConstantRate(DataRate(this->dataRate), this->packetSize);
+    onoff.SetAttribute("StartTime", TimeValue(Seconds(1.000000)));
+    ApplicationContainer clientApp =
+        onoff.Install(wifiNodes.Get(NodeList::GetNNodes() - 1));
+    clientApp.Start(Seconds(1.0));
+    clientApp.Stop(Seconds(this->simulationTime + 1));
+  } else if (this->scenarioType == SINK) {
+    for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i) {
+
+      OnOffHelper onoff(
+          socketFactory,
+          InetSocketAddress(this->interfaces.GetAddress(0), port));
+      onoff.SetConstantRate(DataRate(dataRate), this->packetSize);
+      onoff.SetAttribute("StartTime", TimeValue(Seconds(1.0)));
+      ApplicationContainer clientApp = onoff.Install(wifiNodes.Get(i));
+      clientApp.Start(Seconds(1.0));
+      clientApp.Stop(Seconds(simulationTime + 1));
     }
+  }
 }
 
-void Simulation::end()
-{
+void Simulation::end() {
 
-    uint64_t rxBytes = 0;
-    rxBytes = DynamicCast<PacketSink>(serverApp.Get(0))->GetTotalRx();
+  uint64_t rxBytes = 0;
+  rxBytes = DynamicCast<PacketSink>(serverApp.Get(0))->GetTotalRx();
 
-    /*EndQuery end_query = EndQuery();
-  end_query.set_simulation_id(this->get_id());
+  std::cout << "lost,type,value\n";
+  for (const auto &kv : this->macTx) {
+    std::cout << "lost,macTx," << kv.first << "," << kv.second << "\n";
+  }
 
-  MetaSend(end_query, phi::Meta_MessageType_END_QUERY, zmq_socket);
-  Meso meso = MesoRecv(phi::Meso_MessageType_POSITIONS, zmq_socket);
-  AgentInfos agent_infos = AgentInfos();
-  agent_infos.ParseFromString(meso.content()); */
+  for (const auto &kv : this->macTxDataFailed) {
+    std::cout << "lost,macTxDataFailed," << kv.first << "," << kv.second
+              << "\n";
+  }
 
-    std::cout << "lost,type,value\n";
-    for (const auto &kv : this->macTx)
-    {
-        std::cout << "lost,macTx," << kv.first << "," << kv.second << "\n";
-    }
+  std::cout << "phi,Simulation ID,dataRate,wifiManager,mcs,Rx Bytes\n";
+  std::cout << "phi"
+            << "," << this->get_id() << "," << this->dataRate << ","
+            << this->wifiManager << "," << this->mcs << "," << rxBytes << "\n";
 
-    for (const auto &kv : this->macTxDataFailed)
-    {
-        std::cout << "lost,macTxDataFailed," << kv.first << "," << kv.second << "\n";
-    }
-
-    std::cout << "phi,Simulation ID,dataRate,wifiManager,mcs,Rx Bytes\n";
-    std::cout << "phi"
-              << "," << this->get_id() << "," << this->dataRate << ","
-              << this->wifiManager << "," << this->mcs << "," << rxBytes << "\n";
-    //Integers integers = Integers();
-    //Floats floats = Floats();
-    //Doubles doubles = Doubles();
-    //Strings strings = Strings();
-    /*
   std::cout
       << "positions,agent_id,position_x,position_y,position_z,orientation_x,"
          "orientation_y,orientation_z,orientation_w,angle,last_change\n";
-  int i = 0;
-  for (AgentInfo agent_info : agent_infos.infos()) {
-    glm::dquat orientation = {
-        agent_info.agent_orientation(0), agent_info.agent_orientation(1),
-        agent_info.agent_orientation(2), agent_info.agent_orientation(3)};
+  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+    Ptr<Node> node = NodeList::GetNode(i);
+    Ptr<ConstantVelocityMobilityModel> mob =
+        node->GetObject<ConstantVelocityMobilityModel>();
+    Quaternion orientation = mob->GetOrientation();
+    Vector position = mob->GetPosition();
     std::cout << "positions"
-              << "," << i << "," << agent_info.agent_position(0) << ","
-              << agent_info.agent_position(1) << ","
-              << agent_info.agent_position(2) << "," << orientation.x << ","
-              << orientation.y << "," << orientation.z << "," << orientation.w
-              << ",";
-    for (Value val : agent_info.values()) {
-      if (val.name() == "angle") {
-        for (auto x : val.integers().values()) {
-          std::cout << x << ",";
-        }
-      } else if (val.name() == "last_change") {
-        for (auto x : val.doubles().values()) {
-          std::cout << x << ",";
-        }
-      }
-    }
-    std::cout << "\n";
-    i++;
+              << "," << i << "," << position.x << "," << position.y << ","
+              << position.y << "," << orientation.x << "," << orientation.y
+              << "," << orientation.z << "," << orientation.w << drones[i].angle
+              << "," << drones[i].last_change << "\n";
   }
-  std::cout << std::flush; */
-    //this->zmq_socket.close();
-    //this->zmq_context.close();
+  std::cout << std::flush;
 }

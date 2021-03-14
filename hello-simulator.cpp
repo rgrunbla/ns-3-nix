@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
   int scenarioType = SIMPLE;
 
   /* Mobility configuration */
-  double distance = 1.0; // meters
+  double distance = 1000.0; // meters
 
   /* Wifi configuration */
   bool enablePcap = false;
@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 
   /* Application configuration */
   bool udp = true;
-  std::string dataRate = "100Mbps";
+  std::string dataRate = "500Mbps";
   uint32_t packetSize = 1024; // bytes
 
   CommandLine cmd;
