@@ -12,6 +12,7 @@ LIBS = libns3.33-core-optimized libns3.33-flow-monitor-optimized libns3.33-anten
 #  -g    adds debugging information to the executable file
 #  -Wall turns on most, but not all, compiler warnings
 CFLAGS  = -g -Wall -Wextra $(shell pkg-config --cflags $(LIBS))
+CFLAGS  = -O3 -Wall -Wextra $(shell pkg-config --cflags $(LIBS))
 LDFLAGS=$(shell pkg-config --libs $(LIBS))
 
 # the build target executable:
