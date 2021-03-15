@@ -8,8 +8,8 @@ let
 in
 {
   ns-3 = super.ns-3.override {
-    build_profile = "debug";
-    modules =  ["all_modules" "core" "network" "internet" "point-to-point" "point-to-point-layout" "fd-net-device" "netanim" "flow-monitor" "mobility"];
+    build_profile = "optimized";
+    modules = [ "all_modules" "core" "network" "internet" "point-to-point" "point-to-point-layout" "fd-net-device" "netanim" "flow-monitor" "mobility" ];
     stdenv = super.ccacheStdenv.override {
       extraConfig = ''
         export CCACHE_LOGFILE=/var/cache/ccache/ccache.log
@@ -21,7 +21,13 @@ in
 
   my-ns-3 = self.ns-3.overrideAttrs
     (oldAttrs: rec {
-      src = /home/remy/ns-3/ns-3;
+      src = super.fetchFromGitHub
+        {
+          owner = "rgrunbla";
+          repo = "ns-3-33";
+          rev = "main";
+          sha256 = "089aq2bfn2q3m0hcapbn8ys3p3wqrl18a4zvp0nk1q8lp5rik11k";
+        };
       patches = [ ];
       doCheck = false;
       checkPhase = ''
