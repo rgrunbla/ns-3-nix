@@ -26,7 +26,7 @@ in
           owner = "rgrunbla";
           repo = "ns-3-33";
           rev = "main";
-          sha256 = "089aq2bfn2q3m0hcapbn8ys3p3wqrl18a4zvp0nk1q8lp5rik11k";
+          sha256 = "0nrih8594w55464k1ik90jw6d484s81a9kyfnbvm81l3k48i5d5i";
         };
       patches = [ ];
       doCheck = false;
