@@ -926,8 +926,8 @@ void Simulation::end() {
     Vector position = mob->GetPosition();
     std::cout << "positions"
               << "," << i << "," << position.x << "," << position.y << ","
-              << position.y << "," << orientation.x << "," << orientation.y
-              << "," << orientation.z << "," << orientation.w << drones[i].angle
+              << position.z << "," << orientation.x << "," << orientation.y
+              << "," << orientation.z << "," << orientation.w << "," << drones[i].angle
               << "," << drones[i].last_change << "\n";
   }
   std::cout << std::flush;
