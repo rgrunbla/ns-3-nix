@@ -58,7 +58,7 @@ inline double drone_antenna(double theta, double phi) {
   int index = ((phi + M_PI) * 180.0) / M_PI;
   if (index == 360)
     index--;
-  return antenna_gain[index];
+  return 3.0 + antenna_gain[index];
 }
 
 inline double isotropic_antenna(double theta, double phi) { return 0.0; }
