@@ -96,8 +96,8 @@ public:
   /* Id of the drone, which corresponds to the id of the ns-3 node it hosts */
   int32_t id = -1;
 
-  /* MAC Address of the Wi-Fi card on the drone */
-  std::string address;
+  /* Type of the Drone */
+  std::string agent_type;
 
   /* Size of the search window */
   double window = 360;

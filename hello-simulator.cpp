@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 
   /* Application configuration */
   bool udp = true;
-  std::string dataRate = "500Mbps";
+  std::string dataRate = "100Mbps";
   uint32_t packetSize = 1024; // bytes
 
   CommandLine cmd;
@@ -238,10 +238,9 @@ int main(int argc, char *argv[])
               << i->second.txBytes << "," << i->second.rxPackets << ","
               << i->second.rxBytes << "\n";
   }
-
-  Simulator::Destroy();
-
   /* Communication with Phi - End of Simulation */
   simulation.end();
+
+  Simulator::Destroy();
   return 0;
 }

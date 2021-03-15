@@ -16,7 +16,7 @@ inline static double constrainAngleDeg(double x) {
   return x;
 }
 
-inline double custom_antenna_model(double theta, double phi) {
+inline double drone_antenna(double theta, double phi) {
   // std::cout << "theta = " << theta << ", phi = " << phi << std::endl;
   float antenna_gain[360]{
       -6.8f, -6.8f, -6.8f, -6.8f, -6.7f, -6.7f, -6.7f, -6.6f, -6.6f, -6.6f,
@@ -61,6 +61,8 @@ inline double custom_antenna_model(double theta, double phi) {
   return antenna_gain[index];
 }
 
+inline double isotropic_antenna(double theta, double phi) { return 0.0; }
+
 inline std::string ConvertAddrToString(Address addr) {
   std::ostringstream stream;
   stream << addr;
@@ -90,7 +92,6 @@ inline int32_t extractNodeId(std::string context) {
 Drone::Drone() {}
 
 void Drone::start() {
-  std::cout << "Lancement du drone " << id << "\n";
   Simulator::Schedule(Seconds(0.01), &Drone::controller, this, 0.01);
 }
 
@@ -104,10 +105,10 @@ double Drone::magnetometer() {
 void Drone::controller(double duration) {
   int angle = constrainAngleDeg((magnetometer() * 180.0 / M_PI));
   Simulator::Schedule(Seconds(duration), &Drone::controller, this, duration);
-  std::cout << "[" << Simulator::Now().GetSeconds() << "]"
+  /* std::cout << "[" << Simulator::Now().GetSeconds() << "]"
             << " Controller of drone " << id << " -> " << angle << " -> ["
             << goal << "]"
-            << "\n";
+            << "\n"; */
 
   for (auto &q : power_histories) {
     /*
@@ -133,14 +134,14 @@ void Drone::controller(double duration) {
     }
 
     /* Printing the content of the power curves */
-   /* std::cout << "Node " << id << "\n";
+    /* std::cout << "Node " << id << "\n";
 
-    for (auto &q : power_curves) {
-      for (auto x : q.second) {
-        std::cout << x << ", ";
-      }
-      std::cout << "\n";
-    }*/
+     for (auto &q : power_curves) {
+       for (auto x : q.second) {
+         std::cout << x << ", ";
+       }
+       std::cout << "\n";
+     }*/
   }
 
   this->angle = angle;
@@ -476,13 +477,6 @@ void Simulation::DevMonitorSnifferRx(
       return;
     }
     destination_agent_id = node;
-    /* monitor_query.set_clock(Simulator::Now().GetSeconds());
-monitor_query.set_dest_agent_id(node);
-if (monitor_query.source_agent_id() == monitor_query.dest_agent_id()) {
-  std::cout << monitor_query.source_agent_id() << " -> "
-            << monitor_query.dest_agent_id() << "\n";
-  std::cout << "fuckery\n";
-}*/
     if (drones[node].power_histories.find(source_agent_id) ==
         drones[node].power_histories.end()) {
       FixedQueue<double, 64> queue;
@@ -537,23 +531,14 @@ void Simulation::init(std::vector<std::string> agent_types, int agent_number,
   this->wifiNodes.Create(agent_number);
   this->scenarioType = scenarioType;
 
-  std::string message;
-  /* Init Query */
-  /* InitQuery init_query = InitQuery();
-init_query.set_agent_number(NodeList::GetNNodes()); */
-
   for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
-    std::cout << "Hello\n";
     Ptr<Node> node = NodeList::GetNode(i);
 
     /* Create a Drone object associated to the node */
     drones[node->GetId()] = Drone();
+    drones[node->GetId()].agent_type = agent_types[i];
     drones[node->GetId()].id = node->GetId();
     drones[node->GetId()].start();
-    /* String representing the type of the Agent */
-    // init_query.add_agent_type(agent_types[i]);
-    /* Id of the Agent */
-    // init_query.add_agent_id(node->GetId());
   }
 }
 
@@ -578,8 +563,6 @@ void Simulation::configureMobility(Ptr<ListPositionAllocator> positionAlloc,
     double random_angle = randomVariable->GetValue() * 2 * M_PI /
                           (randomVariable->GetMax() - randomVariable->GetMin());
 
-    /* FIXME: glm::dquat orientation = glm::dquat(glm::dvec3(0.0f, 0.0f,
-random_angle)); mob->SetOrientation(orientation); */
     Quaternion random_orientation = Quaternion(random_angle, Vector(0, 0, 1));
 
     NodeList::GetNode(i)
@@ -598,13 +581,15 @@ random_angle)); mob->SetOrientation(orientation); */
     Ptr<Node> node = NodeList::GetNode(i);
     Ptr<ConstantVelocityMobilityModel> mob =
         node->GetObject<ConstantVelocityMobilityModel>();
+    Quaternion orientation = mob->GetOrientation();
     Vector position = mob->GetPosition();
-    /* glm::dquat orientation = mob->GetOrientation();
     std::cout << "initialpositions"
               << "," << node->GetId() << "," << position.x << "," << position.y
               << "," << position.z << "," << orientation.x << ","
               << orientation.y << "," << orientation.z << "," << orientation.w
-              << "," << glm::degrees(glm::roll(orientation)) << "\n"; */
+              << ","
+              << constrainAngleDeg((drones[i].magnetometer() * 180.0 / M_PI))
+              << "\n";
   }
 }
 
@@ -675,7 +660,14 @@ void Simulation::configureWifi(bool enablePcap, int channelWidth, int mcs,
     wp->SetMaxSupportedRxSpatialStreams(2);
 
     Ptr<CustomAntennaModel> apAntenna = CreateObject<CustomAntennaModel>();
-    apAntenna->SetModel(custom_antenna_model);
+    if (drones[i].agent_type == "Drone") {
+      apAntenna->SetModel(drone_antenna);
+    } else if (drones[i].agent_type == "Client") {
+      apAntenna->SetModel(isotropic_antenna);
+    } else {
+      std::cerr << "Unknown agent type.\n";
+      std::exit(-1);
+    }
     apAntenna->Install(NodeList::GetNode(i));
   }
 }
@@ -918,10 +910,10 @@ void Simulation::end() {
               << "\n";
   }
 
-  std::cout << "phi,Simulation ID,dataRate,wifiManager,mcs,Rx Bytes\n";
+  std::cout << "phi,dataRate,wifiManager,mcs,Rx Bytes\n";
   std::cout << "phi"
-            << "," << this->get_id() << "," << this->dataRate << ","
-            << this->wifiManager << "," << this->mcs << "," << rxBytes << "\n";
+            << "," << this->dataRate << "," << this->wifiManager << ","
+            << this->mcs << "," << rxBytes << "\n";
 
   std::cout
       << "positions,agent_id,position_x,position_y,position_z,orientation_x,"
