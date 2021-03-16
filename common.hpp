@@ -152,7 +152,7 @@ public:
   void configureTraces();
   void configureMobility(Ptr<ListPositionAllocator>,
                          Ptr<UniformRandomVariable>);
-  void configureWifi(bool, int, int, bool, std::string);
+  void configureWifi(bool, int, int, bool, std::string, double);
   void configureInternet();
   void configureRouting();
   void configureApplications(std::string, bool, uint32_t);

@@ -73,7 +73,7 @@ inline double drone_antenna(double theta, double phi) {
   int index = ((phi + M_PI) * 180.0) / M_PI;
   if (index == 360)
     index--;
-  return 3.0 + antenna_gain[index];
+  return antenna_gain[index];
 }
 
 inline double isotropic_antenna(double theta, double phi) { return 0.0; }
@@ -611,7 +611,7 @@ void Simulation::configureMobility(Ptr<ListPositionAllocator> positionAlloc,
 }
 
 void Simulation::configureWifi(bool enablePcap, int channelWidth, int mcs,
-                               bool sgi, std::string wifiManager) {
+                               bool sgi, std::string wifiManager, double antennaGain) {
   this->enablePcap = enablePcap;
   this->channelWidth = channelWidth;
   this->mcs = mcs;
@@ -678,7 +678,8 @@ void Simulation::configureWifi(bool enablePcap, int channelWidth, int mcs,
 
     Ptr<CustomAntennaModel> apAntenna = CreateObject<CustomAntennaModel>();
     if (drones[i].agent_type == "Drone") {
-      apAntenna->SetModel(drone_antenna);
+      std::function<double (double, double)> lambda = [antennaGain](double theta, double phi) { return antennaGain + drone_antenna(theta, phi); };
+      apAntenna->SetModel(lambda);
     } else if (drones[i].agent_type == "Client") {
       apAntenna->SetModel(isotropic_antenna);
     } else {
