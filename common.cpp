@@ -249,7 +249,7 @@ void Drone::controller(double duration) {
     }
     new_angle = max_index;
     window = window / 2;
-    power_curves.clear();
+//    power_curves.clear();
 
 //    std::cout << "Replacing " << goal << " with " << new_angle << "\n";
     goal = new_angle;
