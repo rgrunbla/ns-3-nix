@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include <bits/stdint-uintn.h>
 #include <regex>
+#include <assert.h>
 
 inline static double constrainAngleRad(double x) {
   x = fmod(x, (2 * M_PI));
@@ -14,6 +15,20 @@ inline static double constrainAngleDeg(double x) {
   if (x < 0)
     x += 360;
   return x;
+}
+
+inline static double distanceAngDeg(double a, double b) {
+  a = constrainAngleDeg(a);
+  b = constrainAngleDeg(b);
+  if (std::abs(b - a) <= 180) {
+    return b - a;
+  } else {
+    if (b > a) {
+      return - (360 - std::abs(b - a));
+    } else {
+      return (360 - std::abs(b - a));
+    }
+  }
 }
 
 inline double drone_antenna(double theta, double phi) {
@@ -103,12 +118,12 @@ double Drone::magnetometer() {
 }
 
 void Drone::controller(double duration) {
-  int angle = constrainAngleDeg((magnetometer() * 180.0 / M_PI));
+  angle = constrainAngleDeg((magnetometer() * 180.0 / M_PI));
   Simulator::Schedule(Seconds(duration), &Drone::controller, this, duration);
-  /* std::cout << "[" << Simulator::Now().GetSeconds() << "]"
-            << " Controller of drone " << id << " -> " << angle << " -> ["
-            << goal << "]"
-            << "\n"; */
+
+  /*
+   * Data Update 
+   */
 
   for (auto &q : power_histories) {
     /*
@@ -144,13 +159,17 @@ void Drone::controller(double duration) {
      }*/
   }
 
-  this->angle = angle;
 
+  // std::cout << "Node " << id << " : " << angle << "\n";
   /* Voisinage considéré */
+  if (std::isnan(center)) {
+    center = angle;
+  }
   int radius = window / 2;
-  int min_limit = angle - radius;
-  int max_limit = angle + radius;
-
+  int min_limit = center - radius;
+  int max_limit = center + radius;
+  //std::cout << min_limit << "     " << center << "      " << max_limit << "     " << max_limit - min_limit << "\n";
+  //std::cout << angle << "\n";
   /* Find the first angle where we lack data */
   int new_angle = angle;
   bool missing_data = false;
@@ -160,39 +179,35 @@ void Drone::controller(double duration) {
   /* We search missing data close to our current position */
 
   /* New */
-  for (int i = 0; i < 180; ++i) {
-    for (auto &q : this->power_histories) {
+  int smallest_distance = 1000000;
+  for (int i = min_limit; i < max_limit; ++i) {
+    for (auto &q : power_histories) {
       has_neighbors = true;
-      if (std::isnan(power_curves[q.first][constrainAngleDeg(angle + i)])) {
-        new_angle = constrainAngleDeg(angle + i);
-        missing_data = true;
-        missing_agent = q.first;
-        break;
+      //std::cout << constrainAngleDeg(i) << ", " << angle << " " << distanceAngDeg(angle, i) << "\n";
+      if (std::isnan(power_curves[q.first][constrainAngleDeg(i)])) {
+        if (std::abs(distanceAngDeg(angle, i)) < smallest_distance) {
+          //std::cout << "Old smallest: " << smallest_distance << " new: " << std::abs(distanceAngDeg(angle, i)) << " min " << min_limit << " " << max_limit << "\n";
+          smallest_distance = std::abs(distanceAngDeg(angle, i));
+          new_angle =  constrainAngleDeg(i);
+          missing_data = true;
+          missing_agent = q.first;
+        }
       }
     }
-
-    if (missing_data)
-      break;
-
-    for (auto &q : this->power_histories) {
-      has_neighbors = true;
-      if (std::isnan(power_curves[q.first][constrainAngleDeg(angle - i)])) {
-        new_angle = constrainAngleDeg(angle - i);
-        missing_data = true;
-        missing_agent = q.first;
-        break;
-      }
-    }
-
-    if (missing_data)
-      break;
   }
 
-  if (missing_data) {
-    // std::cout << "Node " << this->get_id() << " lacks data on something: "
-    // << missing_agent << " at angle " << new_angle << "\n";
-    goal = new_angle;
+  if (max_limit == min_limit) {
+        for (auto &q : power_histories) {
+          has_neighbors = true;
+        }
+  }
 
+  /* We lack data in the current search window */
+  if (missing_data) {
+    //std::cout << "Node " << id << " at angle " << angle << " lacks data on something: " << missing_agent << " at angle " << new_angle << " (distance = " << smallest_distance << ")\n";
+    //std::cout << distanceAngDeg(angle, new_angle) << "\n";
+    assert(smallest_distance <= 180.0);
+    goal = new_angle;
     if (new_angle == angle) {
       timeout += 1;
     } else {
@@ -202,7 +217,7 @@ void Drone::controller(double duration) {
       for (auto &q : power_histories) { // We iterate over all the agents
         if (std::isnan(power_curves[q.first][new_angle])) {
           // This agent lacks data for this
-          // angle event if we spernt some
+          // angle event if we spent some
           // time in the configuration
           power_curves[q.first][angle] = -100.0;
         }
@@ -211,8 +226,13 @@ void Drone::controller(double duration) {
     }
   }
 
-  if (!missing_data && has_neighbors && ((goal == -1) || goal == angle)) {
-    // std::cout << "We have data on everything !\n";
+  /* Our search window is full */
+  if (!missing_data && has_neighbors && ((goal == -1) || std::abs(goal - angle) < 1.0)) {
+    /* std::cout << "We have data on everything !\n";
+    std::cout << "Reducing the window. \n";
+    std::cout << "Current angle: " << angle << "\n";
+    std::cout << min_limit << "     " << center << "      " << max_limit << "     " << max_limit - min_limit << "\n"; */
+
     double max_val = -10000000;
     int max_index = angle;
     // For each angle:
@@ -229,45 +249,42 @@ void Drone::controller(double duration) {
     }
     new_angle = max_index;
     window = window / 2;
+    power_curves.clear();
 
-    // this->generic_store["range"]->set(window);
+//    std::cout << "Replacing " << goal << " with " << new_angle << "\n";
     goal = new_angle;
+    center = goal;
+     /*  for (auto x : power_curve) {
+          std::cout << x << ",";
+        }
+        std::cout << "\n"; */
+
+  } else {
+    //std::cout << missing_data << " " << has_neighbors << " " << goal << " " << angle << "\n";
   }
 
   if (has_neighbors) {
-    if (angle != goal) {
+    //std::cout << id << " angle: " << angle << ", goal: " << goal << "\n";
+    if (std::abs(int(angle) - goal) >= 0.0001) {
       last_change = Simulator::Now().GetSeconds();
-      if (goal > angle) {
-        if ((goal - angle) > 180) {
+      if(distanceAngDeg(angle, goal) >= 0.0) {
           // std::cout << "We move right\n";
           NodeList::GetNode(id)
               ->GetObject<ConstantVelocityMobilityModel>()
-              ->SetAngularVelocity(Vector(0.0, 0.0, -0.50));
-        } else {
-          // std::cout << "We move left\n";
-          NodeList::GetNode(id)
-              ->GetObject<ConstantVelocityMobilityModel>()
               ->SetAngularVelocity(Vector(0.0, 0.0, 0.50));
-        }
       } else {
-        if ((angle - goal) > 180) {
-          // std::cout << "We move left\n";
-          NodeList::GetNode(id)
-              ->GetObject<ConstantVelocityMobilityModel>()
-              ->SetAngularVelocity(Vector(0.0, 0.0, 0.50));
-        } else {
-          // std::cout << "We move right\n";
           NodeList::GetNode(id)
               ->GetObject<ConstantVelocityMobilityModel>()
               ->SetAngularVelocity(Vector(0.0, 0.0, -0.50));
-        }
-      }
+      } 
     } else {
-      // std::cout << "Already there!\n";
+      //std::cout << "Already there!\n";
       NodeList::GetNode(id)
           ->GetObject<ConstantVelocityMobilityModel>()
           ->SetAngularVelocity(Vector(0.0, 0.0, 0.0));
     }
+  } else {
+    //std::cout << "No neighbours\n";
   }
 
   if (!has_neighbors) {

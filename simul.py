@@ -104,7 +104,7 @@ def work(combination):
             csvfile.close()
     Path(finished_filename).touch()
 
-num = 16
+num = None
 tp = ThreadPool(num)
 
 random.shuffle(combinations)

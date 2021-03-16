@@ -100,8 +100,17 @@ public:
   std::string agent_type;
 
   /* Size of the search window */
-  double window = 360;
+  int window = 360;
+
+  /* Current position to attain */ 
   double goal = -1;
+
+  /* Center of the search space */ 
+  double center = nan("");
+
+  /* Whether we are in an exploration phase or not */
+  bool exploration = true;
+
   double last_change = 0.0;
   double angle = 0.0;
   int timeout = 0;
