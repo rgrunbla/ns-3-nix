@@ -102,7 +102,7 @@ def work(combination):
                 writer.writerow(line)
             csvfile.flush()
             csvfile.close()
-#    Path(finished_filename).touch()
+    Path(finished_filename).touch()
 
 num = 16
 tp = ThreadPool(num)
