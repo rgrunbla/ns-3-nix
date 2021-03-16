@@ -3,7 +3,7 @@ script: 'hello-simulator'
 repeats: 20
 N: [5, 10]
 scenarioType: [2]
-distance: [100, 250, 500, 1000, 2000]
+distance: [500, 1000, 2000]
 wifiManager: ["ns3::IntelWifiManager", "ns3::MinstrelHtWifiManager", "ns3::IdealWifiManager"]
 simulationTime: [100]
 antennaGain: [3.0, 4.0]

@@ -111,6 +111,8 @@ int main(int argc, char *argv[])
   std::string dataRate = "100Mbps";
   uint32_t packetSize = 1024; // bytes
 
+  double antennaGain = 3.0;
+
   CommandLine cmd;
   cmd.AddValue("scenarioType", "Scenario type", scenarioType);
   cmd.AddValue("enablePcap", "Enable pcap", enablePcap);
@@ -128,6 +130,7 @@ int main(int argc, char *argv[])
                sgi);
   cmd.AddValue("N", "Number of nodes in the simulation", N);
   cmd.AddValue("dataRate", "Datarate", dataRate);
+  cmd.AddValue("antennaGain", "antennaGain", antennaGain);
   cmd.AddValue("packetSize", "Packet Size to use for the On/Off applications",
                packetSize);
   cmd.Parse(argc, argv);
@@ -190,7 +193,7 @@ int main(int argc, char *argv[])
   simulation.configureMobility(positionAlloc, randomVariable);
 
   /* Wifi Configuration */
-  simulation.configureWifi(enablePcap, channelWidth, mcs, sgi, wifiManager);
+  simulation.configureWifi(enablePcap, channelWidth, mcs, sgi, wifiManager, antennaGain);
 
   /* Internet stack*/
   simulation.configureInternet();
