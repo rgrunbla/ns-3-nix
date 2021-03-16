@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-with import <nixpkgs> { overlays = [ (import ./nix-files/overlay.nix) ]; };
+with import <nixpkgs> { overlays = [ ]; };
 
 let
   my-python-packages = python-packages: with python-packages; [
