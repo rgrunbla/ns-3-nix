@@ -110,8 +110,9 @@ int main(int argc, char *argv[])
   bool udp = true;
   std::string dataRate = "100Mbps";
   uint32_t packetSize = 1024; // bytes
-
   double antennaGain = 3.0;
+  std::string antennaModel = "uap_ac_mesh";
+  bool enableFastFading = false;
 
   CommandLine cmd;
   cmd.AddValue("scenarioType", "Scenario type", scenarioType);
@@ -133,6 +134,8 @@ int main(int argc, char *argv[])
   cmd.AddValue("antennaGain", "antennaGain", antennaGain);
   cmd.AddValue("packetSize", "Packet Size to use for the On/Off applications",
                packetSize);
+  cmd.AddValue("antennaModel", "antennaModel", antennaModel);
+  cmd.AddValue("enableFastFading", "enableFastFading", enableFastFading);
   cmd.Parse(argc, argv);
 
   Simulation simulation = Simulation();
@@ -193,7 +196,7 @@ int main(int argc, char *argv[])
   simulation.configureMobility(positionAlloc, randomVariable);
 
   /* Wifi Configuration */
-  simulation.configureWifi(enablePcap, channelWidth, mcs, sgi, wifiManager, antennaGain);
+  simulation.configureWifi(enablePcap, channelWidth, mcs, sgi, wifiManager, antennaModel, antennaGain, enableFastFading);
 
   /* Internet stack*/
   simulation.configureInternet();
