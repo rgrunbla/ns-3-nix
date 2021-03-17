@@ -852,8 +852,8 @@ void Simulation::init(std::vector<std::string> agent_types, int agent_number,
    * Antennas */
 
     std::map<std::string, std::function<double(double, double)>> antennas = {
-        {"uap_ac_mesh", [antennaGain](double theta, double phi) { return antennaGain + uap_ac_mesh_antenna(theta, phi); }},
-        {"uap_ac_mesh_pro", [antennaGain](double theta, double phi) { return antennaGain + uap_ac_mesh_pro_antenna(theta, phi); }},
+        {"uap-ac-mesh", [antennaGain](double theta, double phi) { return antennaGain + uap_ac_mesh_antenna(theta, phi); }},
+        {"uap-ac-mesh-pro", [antennaGain](double theta, double phi) { return antennaGain + uap_ac_mesh_pro_antenna(theta, phi); }},
         {"isotropic", [antennaGain](double theta, double phi) { return 0.0; }}};
 
     for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)

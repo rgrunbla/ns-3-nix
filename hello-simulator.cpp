@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
   std::string dataRate = "100Mbps";
   uint32_t packetSize = 1024; // bytes
   double antennaGain = 3.0;
-  std::string antennaModel = "uap_ac_mesh";
+  std::string antennaModel = "uap-ac-mesh";
   bool enableFastFading = false;
 
   CommandLine cmd;
