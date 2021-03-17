@@ -112,7 +112,8 @@ public:
   bool exploration = true;
 
   double last_change = 0.0;
-  double angle = 0.0;
+  double speed = 0.50;
+  int angle = 0;
   int timeout = 0;
 
   /* Id of the drone I last transmitted to.
@@ -148,7 +149,7 @@ public:
   void DevMonitorSnifferTx(std::string, Ptr<const Packet>, uint16_t,
                            WifiTxVector, struct MpduInfo, uint16_t staId);
 
-  void init(std::vector<std::string>, int, double, ScenarioType);
+  void init(std::vector<std::string>, int, double, ScenarioType, Ptr<UniformRandomVariable>);
   void configureTraces();
   void configureMobility(Ptr<ListPositionAllocator>,
                          Ptr<UniformRandomVariable>);

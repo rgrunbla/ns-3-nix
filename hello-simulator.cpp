@@ -156,11 +156,11 @@ int main(int argc, char *argv[])
     }
   }
 
-  simulation.init(agent_types, N, simulationTime, static_cast<ScenarioType>(scenarioType));
-
   /* Mobility Configuration */
   Ptr<UniformRandomVariable> randomVariable =
       CreateObject<UniformRandomVariable>();
+
+  simulation.init(agent_types, N, simulationTime, static_cast<ScenarioType>(scenarioType), randomVariable);
 
   Ptr<ListPositionAllocator> positionAlloc =
       CreateObject<ListPositionAllocator>();

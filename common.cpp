@@ -290,7 +290,7 @@ void Drone::controller(double duration) {
   if (!has_neighbors) {
     NodeList::GetNode(id)
         ->GetObject<ConstantVelocityMobilityModel>()
-        ->SetAngularVelocity(Vector(0.0, 0.0, 0.50));
+        ->SetAngularVelocity(Vector(0.0, 0.0, speed));
   }
 
   /*
@@ -543,7 +543,7 @@ void Simulation::MacTxDataFailed(std::string nodeIdStr,
 }
 
 void Simulation::init(std::vector<std::string> agent_types, int agent_number,
-                      double simulationTime, ScenarioType scenarioType) {
+                      double simulationTime, ScenarioType scenarioType, Ptr<UniformRandomVariable> randomVariable) {
   this->simulationTime = simulationTime;
   this->wifiNodes.Create(agent_number);
   this->scenarioType = scenarioType;
@@ -556,6 +556,10 @@ void Simulation::init(std::vector<std::string> agent_types, int agent_number,
     drones[node->GetId()].agent_type = agent_types[i];
     drones[node->GetId()].id = node->GetId();
     drones[node->GetId()].start();
+    drones[node->GetId()].speed = 0.50 - 0.05 + (randomVariable->GetValue() * 0.10) / (randomVariable->GetMax() - randomVariable->GetMin());
+    if (randomVariable->GetValue() >= ((randomVariable->GetMax() - randomVariable->GetMin()) / 2.0)) {
+      drones[node->GetId()].speed *= -1.0;
+    }
   }
 }
 
