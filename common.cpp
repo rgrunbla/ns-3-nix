@@ -711,213 +711,216 @@ void Simulation::init(std::vector<std::string> agent_types, int agent_number,
   for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
   {
     Ptr<Node> node = NodeList::GetNode(i);
-
     /* Create a Drone object associated to the node */
     drones[node->GetId()] = Drone();
     drones[node->GetId()].agent_type = agent_types[i];
     drones[node->GetId()].id = node->GetId();
-    drones[node->GetId()].start();
     drones[node->GetId()].speed = 0.50 - 0.05 + (randomVariable->GetValue() * 0.10) / (randomVariable->GetMax() - randomVariable->GetMin());
     if (randomVariable->GetValue() >= ((randomVariable->GetMax() - randomVariable->GetMin()) / 2.0))
     {
       drones[node->GetId()].speed *= -1.0;
     }
-  }
-}
-
-void Simulation::configureMobility(Ptr<ListPositionAllocator> positionAlloc,
-                                   Ptr<UniformRandomVariable> randomVariable)
-{
-
-  MobilityHelper mobility;
-  mobility.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
-  mobility.Install(wifiNodes);
-
-  /* Actually set up the positions */
-  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-  {
-    Ptr<ConstantVelocityMobilityModel> mob =
-        NodeList::GetNode(i)->GetObject<ConstantVelocityMobilityModel>();
-    mob->SetPosition(positionAlloc->GetNext());
-  }
-
-  /* Set up the nodes initial orientations */
-  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-  {
-    Ptr<ConstantVelocityMobilityModel> mob =
-        NodeList::GetNode(i)->GetObject<ConstantVelocityMobilityModel>();
-    double random_angle = randomVariable->GetValue() * 2 * M_PI /
-                          (randomVariable->GetMax() - randomVariable->GetMin());
-
-    Quaternion random_orientation = Quaternion(random_angle, Vector(0, 0, 1));
-
-    NodeList::GetNode(i)
-        ->GetObject<ConstantVelocityMobilityModel>()
-        ->SetOrientation(random_orientation);
-    NodeList::GetNode(i)
-        ->GetObject<ConstantVelocityMobilityModel>()
-        ->SetAngularVelocity(Vector(0.0, 0.0, 0.0));
-  }
-
-  std::cout
-      << "initialpositions,agent_id,position_x,position_y,position_z,"
-         "orientation_x,orientation_y,orientation_z,orientation_w,angle\n";
-
-  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-  {
-    Ptr<Node> node = NodeList::GetNode(i);
-    Ptr<ConstantVelocityMobilityModel> mob =
-        node->GetObject<ConstantVelocityMobilityModel>();
-    Quaternion orientation = mob->GetOrientation();
-    Vector position = mob->GetPosition();
-    std::cout << "initialpositions"
-              << "," << node->GetId() << "," << position.x << "," << position.y
-              << "," << position.z << "," << orientation.x << ","
-              << orientation.y << "," << orientation.z << "," << orientation.w
-              << ","
-              << constrainAngleDeg((drones[i].magnetometer() * 180.0 / M_PI))
-              << "\n";
-  }
-}
-
-void Simulation::configureWifi(bool enablePcap, int channelWidth, int mcs,
-                               bool sgi, std::string wifiManager, std::string antennaModel, double antennaGain, bool enableFastFading)
-{
-  this->enablePcap = enablePcap;
-  this->channelWidth = channelWidth;
-  this->mcs = mcs;
-  this->sgi = sgi;
-  this->wifiManager = wifiManager;
-
-  YansWifiPhyHelper phy = YansWifiPhyHelper();
-  // phy.DisablePreambleDetectionModel();
-  phy.SetPcapDataLinkType(YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
-
-  YansWifiChannelHelper channel;
-  channel.AddPropagationLoss("ns3::FriisPropagationLossModel");
-  if (enableFastFading) {
-    channel.AddPropagationLoss("ns3::NakagamiPropagationLossModel");
-  }
-  channel.AddPropagationLoss("ns3::AntennaPropagationLossModel");
-  channel.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
-  phy.SetChannel(channel.Create());
-
-  WifiHelper wifi;
-  wifi.SetStandard(WIFI_PHY_STANDARD_80211ac);
-  WifiMacHelper mac;
-
-  if (mcs >= 0 && mcs <= 9)
-  {
-    if (mcs == 9 && channelWidth == 20)
+    if (agent_types[i] == "Drone")
     {
-      std::cout << "MCS 9 and 20 MHZ width is disabled."
+      drones[node->GetId()].start();
+    }
+  }
+}
+
+  void Simulation::configureMobility(Ptr<ListPositionAllocator> positionAlloc,
+                                     Ptr<UniformRandomVariable> randomVariable)
+  {
+
+    MobilityHelper mobility;
+    mobility.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
+    mobility.Install(wifiNodes);
+
+    /* Actually set up the positions */
+    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
+    {
+      Ptr<ConstantVelocityMobilityModel> mob =
+          NodeList::GetNode(i)->GetObject<ConstantVelocityMobilityModel>();
+      mob->SetPosition(positionAlloc->GetNext());
+    }
+
+    /* Set up the nodes initial orientations */
+    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
+    {
+      Ptr<ConstantVelocityMobilityModel> mob =
+          NodeList::GetNode(i)->GetObject<ConstantVelocityMobilityModel>();
+      double random_angle = randomVariable->GetValue() * 2 * M_PI /
+                            (randomVariable->GetMax() - randomVariable->GetMin());
+
+      Quaternion random_orientation = Quaternion(random_angle, Vector(0, 0, 1));
+
+      NodeList::GetNode(i)
+          ->GetObject<ConstantVelocityMobilityModel>()
+          ->SetOrientation(random_orientation);
+      NodeList::GetNode(i)
+          ->GetObject<ConstantVelocityMobilityModel>()
+          ->SetAngularVelocity(Vector(0.0, 0.0, 0.0));
+    }
+
+    std::cout
+        << "initialpositions,agent_id,position_x,position_y,position_z,"
+           "orientation_x,orientation_y,orientation_z,orientation_w,angle\n";
+
+    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
+    {
+      Ptr<Node> node = NodeList::GetNode(i);
+      Ptr<ConstantVelocityMobilityModel> mob =
+          node->GetObject<ConstantVelocityMobilityModel>();
+      Quaternion orientation = mob->GetOrientation();
+      Vector position = mob->GetPosition();
+      std::cout << "initialpositions"
+                << "," << node->GetId() << "," << position.x << "," << position.y
+                << "," << position.z << "," << orientation.x << ","
+                << orientation.y << "," << orientation.z << "," << orientation.w
+                << ","
+                << constrainAngleDeg((drones[i].magnetometer() * 180.0 / M_PI))
                 << "\n";
-      exit(0);
     }
-    std::ostringstream oss;
-    oss << "VhtMcs" << mcs;
-    wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager", "DataMode",
-                                 StringValue(oss.str()), "ControlMode",
-                                 StringValue(oss.str()));
-  }
-  else
-  {
-    wifi.SetRemoteStationManager(wifiManager);
   }
 
-  Ssid ssid = Ssid("ns3-80211ac");
-
-  mac.SetType("ns3::AdhocWifiMac");
-
-  this->devices = wifi.Install(phy, mac, this->wifiNodes);
-
-  if (enablePcap)
+  void Simulation::configureWifi(bool enablePcap, int channelWidth, int mcs,
+                                 bool sgi, std::string wifiManager, std::string antennaModel, double antennaGain, bool enableFastFading)
   {
-    phy.EnablePcap("STA", devices);
-  }
+    this->enablePcap = enablePcap;
+    this->channelWidth = channelWidth;
+    this->mcs = mcs;
+    this->sgi = sgi;
+    this->wifiManager = wifiManager;
 
-  /* Set channel width */
-  Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelWidth",
-              UintegerValue(channelWidth));
+    YansWifiPhyHelper phy = YansWifiPhyHelper();
+    // phy.DisablePreambleDetectionModel();
+    phy.SetPcapDataLinkType(YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
 
-  /* Set guard interval */
-  Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/"
-              "ShortGuardIntervalSupported",
-              BooleanValue(sgi));
-
-  /* Post-install configuration for channel width, guard interval, NSS and
-   * Antennas */
-
-  std::map<std::string, std::function<double(double, double)>> antennas = {
-      {"uap_ac_mesh", [antennaGain](double theta, double phi) { return antennaGain + uap_ac_mesh_antenna(theta, phi); }},
-      {"uap_ac_mesh_pro", [antennaGain](double theta, double phi) { return antennaGain + uap_ac_mesh_pro_antenna(theta, phi); }},
-      {"isotropic", [antennaGain](double theta, double phi) { return 0.0; }}};
-
-  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-  {
-    Ptr<NetDevice> nd = devices.Get(i);
-    Ptr<WifiNetDevice> wnd = nd->GetObject<WifiNetDevice>();
-    Ptr<WifiPhy> wp = wnd->GetPhy();
-    wp->SetNumberOfAntennas(2);
-    wp->SetMaxSupportedTxSpatialStreams(2);
-    wp->SetMaxSupportedRxSpatialStreams(2);
-
-    Ptr<CustomAntennaModel> apAntenna = CreateObject<CustomAntennaModel>();
-
-    if (drones[i].agent_type == "Drone")
+    YansWifiChannelHelper channel;
+    channel.AddPropagationLoss("ns3::FriisPropagationLossModel");
+    if (enableFastFading)
     {
-      apAntenna->SetModel(antennas[antennaModel]);
+      channel.AddPropagationLoss("ns3::NakagamiPropagationLossModel");
     }
-    else if (drones[i].agent_type == "Client")
+    channel.AddPropagationLoss("ns3::AntennaPropagationLossModel");
+    channel.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
+    phy.SetChannel(channel.Create());
+
+    WifiHelper wifi;
+    wifi.SetStandard(WIFI_PHY_STANDARD_80211ac);
+    WifiMacHelper mac;
+
+    if (mcs >= 0 && mcs <= 9)
     {
-      apAntenna->SetModel(antennas["isotropic"]);
+      if (mcs == 9 && channelWidth == 20)
+      {
+        std::cout << "MCS 9 and 20 MHZ width is disabled."
+                  << "\n";
+        exit(0);
+      }
+      std::ostringstream oss;
+      oss << "VhtMcs" << mcs;
+      wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager", "DataMode",
+                                   StringValue(oss.str()), "ControlMode",
+                                   StringValue(oss.str()));
     }
     else
     {
-      std::cerr << "Unknown agent type.\n";
-      std::exit(-1);
+      wifi.SetRemoteStationManager(wifiManager);
     }
-    apAntenna->Install(NodeList::GetNode(i));
-  }
-}
 
-void Simulation::configureTraces()
-{
-  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
+    Ssid ssid = Ssid("ns3-80211ac");
+
+    mac.SetType("ns3::AdhocWifiMac");
+
+    this->devices = wifi.Install(phy, mac, this->wifiNodes);
+
+    if (enablePcap)
+    {
+      phy.EnablePcap("STA", devices);
+    }
+
+    /* Set channel width */
+    Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelWidth",
+                UintegerValue(channelWidth));
+
+    /* Set guard interval */
+    Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/"
+                "ShortGuardIntervalSupported",
+                BooleanValue(sgi));
+
+    /* Post-install configuration for channel width, guard interval, NSS and
+   * Antennas */
+
+    std::map<std::string, std::function<double(double, double)>> antennas = {
+        {"uap_ac_mesh", [antennaGain](double theta, double phi) { return antennaGain + uap_ac_mesh_antenna(theta, phi); }},
+        {"uap_ac_mesh_pro", [antennaGain](double theta, double phi) { return antennaGain + uap_ac_mesh_pro_antenna(theta, phi); }},
+        {"isotropic", [antennaGain](double theta, double phi) { return 0.0; }}};
+
+    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
+    {
+      Ptr<NetDevice> nd = devices.Get(i);
+      Ptr<WifiNetDevice> wnd = nd->GetObject<WifiNetDevice>();
+      Ptr<WifiPhy> wp = wnd->GetPhy();
+      wp->SetNumberOfAntennas(2);
+      wp->SetMaxSupportedTxSpatialStreams(2);
+      wp->SetMaxSupportedRxSpatialStreams(2);
+
+      Ptr<CustomAntennaModel> apAntenna = CreateObject<CustomAntennaModel>();
+
+      if (drones[i].agent_type == "Drone")
+      {
+        apAntenna->SetModel(antennas[antennaModel]);
+      }
+      else if (drones[i].agent_type == "Client")
+      {
+        apAntenna->SetModel(antennas["isotropic"]);
+      }
+      else
+      {
+        std::cerr << "Unknown agent type.\n";
+        std::exit(-1);
+      }
+      apAntenna->Install(NodeList::GetNode(i));
+    }
+  }
+
+  void Simulation::configureTraces()
   {
-    Config::Connect(
-        "/NodeList/" + std::to_string(i) +
-            "/DeviceList/*/$ns3::WifiNetDevice/Phy/MonitorSnifferRx",
-        MakeCallback(&Simulation::DevMonitorSnifferRx, this));
-    Config::Connect(
-        "/NodeList/" + std::to_string(i) +
-            "/DeviceList/*/$ns3::WifiNetDevice/Phy/MonitorSnifferTx",
-        MakeCallback(&Simulation::DevMonitorSnifferTx, this));
+    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
+    {
+      Config::Connect(
+          "/NodeList/" + std::to_string(i) +
+              "/DeviceList/*/$ns3::WifiNetDevice/Phy/MonitorSnifferRx",
+          MakeCallback(&Simulation::DevMonitorSnifferRx, this));
+      Config::Connect(
+          "/NodeList/" + std::to_string(i) +
+              "/DeviceList/*/$ns3::WifiNetDevice/Phy/MonitorSnifferTx",
+          MakeCallback(&Simulation::DevMonitorSnifferTx, this));
 
-    Config::Connect("/NodeList/" + std::to_string(i) +
-                        "/DeviceList/*/$ns3::WifiNetDevice/"
-                        "RemoteStationManager/MacTxDataFailed",
-                    MakeCallback(&Simulation::MacTxDataFailed, this));
+      Config::Connect("/NodeList/" + std::to_string(i) +
+                          "/DeviceList/*/$ns3::WifiNetDevice/"
+                          "RemoteStationManager/MacTxDataFailed",
+                      MakeCallback(&Simulation::MacTxDataFailed, this));
 
-    Config::Connect("/NodeList/" + std::to_string(i) +
-                        "/DeviceList/*/$ns3::WifiNetDevice/Mac/MacTx",
-                    MakeCallback(&Simulation::MacTx, this));
+      Config::Connect("/NodeList/" + std::to_string(i) +
+                          "/DeviceList/*/$ns3::WifiNetDevice/Mac/MacTx",
+                      MakeCallback(&Simulation::MacTx, this));
+    }
   }
-}
 
-void Simulation::configureInternet()
-{
-  InternetStackHelper stack;
-  stack.Install(this->wifiNodes);
+  void Simulation::configureInternet()
+  {
+    InternetStackHelper stack;
+    stack.Install(this->wifiNodes);
 
-  Ipv4AddressHelper address;
-  address.SetBase("192.168.1.0", "255.255.255.0");
-  this->interfaces = address.Assign(this->devices);
-}
+    Ipv4AddressHelper address;
+    address.SetBase("192.168.1.0", "255.255.255.0");
+    this->interfaces = address.Assign(this->devices);
+  }
 
-void Simulation::configureRouting()
-{
-  /*   for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
+  void Simulation::configureRouting()
+  {
+    /*   for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i) {
     Ptr<Ipv4> ipv4 = wifiNodes.Get(i)->GetObject<Ipv4>();
     NS_LOG_DEBUG("Node " << i << " has " << ipv4->GetNInterfaces()
                          << " interfaces:\n");
@@ -930,250 +933,250 @@ void Simulation::configureRouting()
     }
   } */
 
-  Ipv4StaticRoutingHelper staticRoutingHelper;
+    Ipv4StaticRoutingHelper staticRoutingHelper;
 
-  if ((this->scenarioType == SIMPLE) || (this->scenarioType == CHAIN))
-  {
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
+    if ((this->scenarioType == SIMPLE) || (this->scenarioType == CHAIN))
     {
-      Ptr<Ipv4> ipv4 = wifiNodes.Get(i)->GetObject<Ipv4>();
-      Ptr<Ipv4StaticRouting> staticRouting =
-          staticRoutingHelper.GetStaticRouting(ipv4);
-
-      if (i > 0)
+      for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
       {
-        staticRouting->AddHostRouteTo(
-            Ipv4Address(("192.168.1." + std::to_string(i)).c_str()), 1);
+        Ptr<Ipv4> ipv4 = wifiNodes.Get(i)->GetObject<Ipv4>();
+        Ptr<Ipv4StaticRouting> staticRouting =
+            staticRoutingHelper.GetStaticRouting(ipv4);
 
-        for (uint32_t j = 0; j < i - 1; ++j)
+        if (i > 0)
+        {
+          staticRouting->AddHostRouteTo(
+              Ipv4Address(("192.168.1." + std::to_string(i)).c_str()), 1);
+
+          for (uint32_t j = 0; j < i - 1; ++j)
+          {
+            staticRouting->AddHostRouteTo(
+                Ipv4Address(("192.168.1." + std::to_string(j + 1)).c_str()),
+                Ipv4Address(("192.168.1." + std::to_string(i)).c_str()), 1);
+          }
+        }
+
+        for (uint32_t j = i + 2; j < NodeList::GetNNodes(); ++j)
         {
           staticRouting->AddHostRouteTo(
               Ipv4Address(("192.168.1." + std::to_string(j + 1)).c_str()),
-              Ipv4Address(("192.168.1." + std::to_string(i)).c_str()), 1);
+              Ipv4Address(("192.168.1." + std::to_string(i + 2)).c_str()), 1);
+        }
+
+        if (i < NodeList::GetNNodes() - 1)
+        {
+          staticRouting->AddHostRouteTo(
+              Ipv4Address(("192.168.1." + std::to_string(i + 2)).c_str()), 1);
         }
       }
-
-      for (uint32_t j = i + 2; j < NodeList::GetNNodes(); ++j)
+    }
+    else if (this->scenarioType == SINK)
+    {
+      for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i)
       {
+        Ptr<Ipv4> ipv4 = wifiNodes.Get(i)->GetObject<Ipv4>();
+        Ptr<Ipv4StaticRouting> staticRouting =
+            staticRoutingHelper.GetStaticRouting(ipv4);
         staticRouting->AddHostRouteTo(
-            Ipv4Address(("192.168.1." + std::to_string(j + 1)).c_str()),
-            Ipv4Address(("192.168.1." + std::to_string(i + 2)).c_str()), 1);
+            Ipv4Address(("192.168.1." + std::to_string(0 + 1)).c_str()), 1);
       }
 
-      if (i < NodeList::GetNNodes() - 1)
+      for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i)
       {
+        Ptr<Ipv4> ipv4 = wifiNodes.Get(0)->GetObject<Ipv4>();
+        Ptr<Ipv4StaticRouting> staticRouting =
+            staticRoutingHelper.GetStaticRouting(ipv4);
         staticRouting->AddHostRouteTo(
-            Ipv4Address(("192.168.1." + std::to_string(i + 2)).c_str()), 1);
+            Ipv4Address(("192.168.1." + std::to_string(i + 1)).c_str()), 1);
       }
     }
   }
-  else if (this->scenarioType == SINK)
+
+  void Simulation::configureApplications(std::string dataRate, bool udp,
+                                         uint32_t packetSize)
   {
-    for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i)
+    this->dataRate = dataRate;
+    this->udp = udp;
+    this->packetSize = packetSize;
+
+    uint32_t payloadSize; // 1500 byte IP packet
+    if (this->udp)
     {
-      Ptr<Ipv4> ipv4 = wifiNodes.Get(i)->GetObject<Ipv4>();
-      Ptr<Ipv4StaticRouting> staticRouting =
-          staticRoutingHelper.GetStaticRouting(ipv4);
-      staticRouting->AddHostRouteTo(
-          Ipv4Address(("192.168.1." + std::to_string(0 + 1)).c_str()), 1);
+      payloadSize = 1472; // bytes
+    }
+    else
+    {
+      payloadSize = 1448; // bytes
+      Config::SetDefault("ns3::TcpSocket::SegmentSize",
+                         UintegerValue(payloadSize));
     }
 
-    for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i)
-    {
-      Ptr<Ipv4> ipv4 = wifiNodes.Get(0)->GetObject<Ipv4>();
-      Ptr<Ipv4StaticRouting> staticRouting =
-          staticRoutingHelper.GetStaticRouting(ipv4);
-      staticRouting->AddHostRouteTo(
-          Ipv4Address(("192.168.1." + std::to_string(i + 1)).c_str()), 1);
-    }
-  }
-}
-
-void Simulation::configureApplications(std::string dataRate, bool udp,
-                                       uint32_t packetSize)
-{
-  this->dataRate = dataRate;
-  this->udp = udp;
-  this->packetSize = packetSize;
-
-  uint32_t payloadSize; // 1500 byte IP packet
-  if (this->udp)
-  {
-    payloadSize = 1472; // bytes
-  }
-  else
-  {
-    payloadSize = 1448; // bytes
-    Config::SetDefault("ns3::TcpSocket::SegmentSize",
-                       UintegerValue(payloadSize));
-  }
-
-  /* Generate traffic to populate the ARP tables before the start of the
+    /* Generate traffic to populate the ARP tables before the start of the
    * applications */
-  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-  {
-    uint16_t port = 1337;
-    PacketSinkHelper sink(
-        "ns3::UdpSocketFactory",
-        InetSocketAddress(this->interfaces.GetAddress(i), port));
-    ApplicationContainer serverApp = sink.Install(wifiNodes.Get(i));
-    serverApp.Start(Seconds(0.0));
-    serverApp.Stop(Seconds(1));
-
-    if (this->scenarioType == CHAIN)
+    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
     {
-      /* Node Before */
-      if (i > 0)
-      {
-        UdpClientHelper client(
-            InetSocketAddress(this->interfaces.GetAddress(i - 1), port));
-        client.SetAttribute("MaxPackets", UintegerValue(10));
-        client.SetAttribute("Interval", TimeValue(Seconds(.05)));
-        client.SetAttribute("PacketSize", UintegerValue(12));
+      uint16_t port = 1337;
+      PacketSinkHelper sink(
+          "ns3::UdpSocketFactory",
+          InetSocketAddress(this->interfaces.GetAddress(i), port));
+      ApplicationContainer serverApp = sink.Install(wifiNodes.Get(i));
+      serverApp.Start(Seconds(0.0));
+      serverApp.Stop(Seconds(1));
 
-        ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-        clientApp.Start(Seconds(i * 0.02));
-        clientApp.Stop(Seconds(1));
+      if (this->scenarioType == CHAIN)
+      {
+        /* Node Before */
+        if (i > 0)
+        {
+          UdpClientHelper client(
+              InetSocketAddress(this->interfaces.GetAddress(i - 1), port));
+          client.SetAttribute("MaxPackets", UintegerValue(10));
+          client.SetAttribute("Interval", TimeValue(Seconds(.05)));
+          client.SetAttribute("PacketSize", UintegerValue(12));
+
+          ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
+          clientApp.Start(Seconds(i * 0.02));
+          clientApp.Stop(Seconds(1));
+        }
+        /* Node After */
+        if (i < NodeList::GetNNodes() - 1)
+        {
+          UdpClientHelper client(
+              InetSocketAddress(this->interfaces.GetAddress(i + 1), port));
+          client.SetAttribute("MaxPackets", UintegerValue(10));
+          client.SetAttribute("Interval", TimeValue(Seconds(.05)));
+          client.SetAttribute("PacketSize", UintegerValue(12));
+
+          ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
+          clientApp.Start(Seconds(i * 0.02));
+          clientApp.Stop(Seconds(1));
+        }
       }
-      /* Node After */
-      if (i < NodeList::GetNNodes() - 1)
+      else if ((this->scenarioType == SIMPLE) || (this->scenarioType == SINK))
       {
-        UdpClientHelper client(
-            InetSocketAddress(this->interfaces.GetAddress(i + 1), port));
-        client.SetAttribute("MaxPackets", UintegerValue(10));
-        client.SetAttribute("Interval", TimeValue(Seconds(.05)));
-        client.SetAttribute("PacketSize", UintegerValue(12));
+        if (i != 0)
+        {
+          UdpClientHelper client(
+              InetSocketAddress(this->interfaces.GetAddress(0), port));
+          client.SetAttribute("MaxPackets", UintegerValue(10));
+          client.SetAttribute("Interval", TimeValue(Seconds(.05)));
+          client.SetAttribute("PacketSize", UintegerValue(12));
 
-        ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-        clientApp.Start(Seconds(i * 0.02));
-        clientApp.Stop(Seconds(1));
+          ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
+          clientApp.Start(Seconds(i * 0.02));
+          clientApp.Stop(Seconds(1));
+        }
       }
     }
-    else if ((this->scenarioType == SIMPLE) || (this->scenarioType == SINK))
-    {
-      if (i != 0)
-      {
-        UdpClientHelper client(
-            InetSocketAddress(this->interfaces.GetAddress(0), port));
-        client.SetAttribute("MaxPackets", UintegerValue(10));
-        client.SetAttribute("Interval", TimeValue(Seconds(.05)));
-        client.SetAttribute("PacketSize", UintegerValue(12));
 
-        ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-        clientApp.Start(Seconds(i * 0.02));
-        clientApp.Stop(Seconds(1));
-      }
+    /* Broadcast 10 times per second with the neighbours */
+    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
+    {
+      uint16_t port = 9;
+      PacketSinkHelper sink(
+          "ns3::UdpSocketFactory",
+          InetSocketAddress(this->interfaces.GetAddress(i), port));
+      ApplicationContainer serverApp = sink.Install(wifiNodes.Get(i));
+      serverApp.Start(Seconds(0.0 + i * 0.01));
+      serverApp.Stop(Seconds(this->simulationTime + 1));
+
+      UdpClientHelper client(InetSocketAddress(
+          this->interfaces.GetAddress(0).GetSubnetDirectedBroadcast(
+              Ipv4Mask("/24")),
+          port));
+      client.SetAttribute("MaxPackets",
+                          UintegerValue(2 * this->simulationTime * 1 / (0.10)));
+      client.SetAttribute("Interval", TimeValue(Seconds(.10)));
+      client.SetAttribute("PacketSize", UintegerValue(12));
+
+      ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
+      clientApp.Start(Seconds(1.01 + i * 0.01));
+      clientApp.Stop(Seconds(this->simulationTime + 1));
     }
-  }
 
-  /* Broadcast 10 times per second with the neighbours */
-  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-  {
-    uint16_t port = 9;
-    PacketSinkHelper sink(
-        "ns3::UdpSocketFactory",
-        InetSocketAddress(this->interfaces.GetAddress(i), port));
-    ApplicationContainer serverApp = sink.Install(wifiNodes.Get(i));
-    serverApp.Start(Seconds(0.0 + i * 0.01));
-    serverApp.Stop(Seconds(this->simulationTime + 1));
+    uint16_t port = 1234;
+    std::string socketFactory;
 
-    UdpClientHelper client(InetSocketAddress(
-        this->interfaces.GetAddress(0).GetSubnetDirectedBroadcast(
-            Ipv4Mask("/24")),
-        port));
-    client.SetAttribute("MaxPackets",
-                        UintegerValue(2 * this->simulationTime * 1 / (0.10)));
-    client.SetAttribute("Interval", TimeValue(Seconds(.10)));
-    client.SetAttribute("PacketSize", UintegerValue(12));
-
-    ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-    clientApp.Start(Seconds(1.01 + i * 0.01));
-    clientApp.Stop(Seconds(this->simulationTime + 1));
-  }
-
-  uint16_t port = 1234;
-  std::string socketFactory;
-
-  if (udp)
-  {
-    socketFactory = "ns3::UdpSocketFactory";
-  }
-  else
-  {
-    socketFactory = "ns3::TcpSocketFactory";
-  }
-
-  PacketSinkHelper sink(
-      socketFactory, InetSocketAddress(this->interfaces.GetAddress(0), port));
-  this->serverApp = sink.Install(wifiNodes.Get(0));
-  this->serverApp.Start(Seconds(0.0));
-  this->serverApp.Stop(Seconds(this->simulationTime + 1));
-
-  if ((this->scenarioType == SIMPLE) || (this->scenarioType == CHAIN))
-  {
-    OnOffHelper onoff(socketFactory,
-                      InetSocketAddress(this->interfaces.GetAddress(0), port));
-    onoff.SetConstantRate(DataRate(this->dataRate), this->packetSize);
-    onoff.SetAttribute("StartTime", TimeValue(Seconds(1.000000)));
-    ApplicationContainer clientApp =
-        onoff.Install(wifiNodes.Get(NodeList::GetNNodes() - 1));
-    clientApp.Start(Seconds(1.0));
-    clientApp.Stop(Seconds(this->simulationTime + 1));
-  }
-  else if (this->scenarioType == SINK)
-  {
-    for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i)
+    if (udp)
     {
+      socketFactory = "ns3::UdpSocketFactory";
+    }
+    else
+    {
+      socketFactory = "ns3::TcpSocketFactory";
+    }
 
-      OnOffHelper onoff(
-          socketFactory,
-          InetSocketAddress(this->interfaces.GetAddress(0), port));
-      onoff.SetConstantRate(DataRate(dataRate), this->packetSize);
-      onoff.SetAttribute("StartTime", TimeValue(Seconds(1.0)));
-      ApplicationContainer clientApp = onoff.Install(wifiNodes.Get(i));
+    PacketSinkHelper sink(
+        socketFactory, InetSocketAddress(this->interfaces.GetAddress(0), port));
+    this->serverApp = sink.Install(wifiNodes.Get(0));
+    this->serverApp.Start(Seconds(0.0));
+    this->serverApp.Stop(Seconds(this->simulationTime + 1));
+
+    if ((this->scenarioType == SIMPLE) || (this->scenarioType == CHAIN))
+    {
+      OnOffHelper onoff(socketFactory,
+                        InetSocketAddress(this->interfaces.GetAddress(0), port));
+      onoff.SetConstantRate(DataRate(this->dataRate), this->packetSize);
+      onoff.SetAttribute("StartTime", TimeValue(Seconds(1.000000)));
+      ApplicationContainer clientApp =
+          onoff.Install(wifiNodes.Get(NodeList::GetNNodes() - 1));
       clientApp.Start(Seconds(1.0));
-      clientApp.Stop(Seconds(simulationTime + 1));
+      clientApp.Stop(Seconds(this->simulationTime + 1));
+    }
+    else if (this->scenarioType == SINK)
+    {
+      for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i)
+      {
+
+        OnOffHelper onoff(
+            socketFactory,
+            InetSocketAddress(this->interfaces.GetAddress(0), port));
+        onoff.SetConstantRate(DataRate(dataRate), this->packetSize);
+        onoff.SetAttribute("StartTime", TimeValue(Seconds(1.0)));
+        ApplicationContainer clientApp = onoff.Install(wifiNodes.Get(i));
+        clientApp.Start(Seconds(1.0));
+        clientApp.Stop(Seconds(simulationTime + 1));
+      }
     }
   }
-}
 
-void Simulation::end()
-{
-  uint64_t rxBytes = 0;
-  rxBytes = DynamicCast<PacketSink>(serverApp.Get(0))->GetTotalRx();
-
-  std::cout << "lost,type,value\n";
-  for (const auto &kv : this->macTx)
+  void Simulation::end()
   {
-    std::cout << "lost,macTx," << kv.first << "," << kv.second << "\n";
-  }
+    uint64_t rxBytes = 0;
+    rxBytes = DynamicCast<PacketSink>(serverApp.Get(0))->GetTotalRx();
 
-  for (const auto &kv : this->macTxDataFailed)
-  {
-    std::cout << "lost,macTxDataFailed," << kv.first << "," << kv.second
-              << "\n";
-  }
+    std::cout << "lost,type,value\n";
+    for (const auto &kv : this->macTx)
+    {
+      std::cout << "lost,macTx," << kv.first << "," << kv.second << "\n";
+    }
 
-  std::cout << "phi,dataRate,wifiManager,mcs,Rx Bytes\n";
-  std::cout << "phi"
-            << "," << this->dataRate << "," << this->wifiManager << ","
-            << this->mcs << "," << rxBytes << "\n";
+    for (const auto &kv : this->macTxDataFailed)
+    {
+      std::cout << "lost,macTxDataFailed," << kv.first << "," << kv.second
+                << "\n";
+    }
 
-  std::cout
-      << "positions,agent_id,position_x,position_y,position_z,orientation_x,"
-         "orientation_y,orientation_z,orientation_w,angle,last_change\n";
-  for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-  {
-    Ptr<Node> node = NodeList::GetNode(i);
-    Ptr<ConstantVelocityMobilityModel> mob =
-        node->GetObject<ConstantVelocityMobilityModel>();
-    Quaternion orientation = mob->GetOrientation();
-    Vector position = mob->GetPosition();
-    std::cout << "positions"
-              << "," << i << "," << position.x << "," << position.y << ","
-              << position.z << "," << orientation.x << "," << orientation.y
-              << "," << orientation.z << "," << orientation.w << "," << drones[i].angle
-              << "," << drones[i].last_change << "\n";
+    std::cout << "phi,dataRate,wifiManager,mcs,Rx Bytes\n";
+    std::cout << "phi"
+              << "," << this->dataRate << "," << this->wifiManager << ","
+              << this->mcs << "," << rxBytes << "\n";
+
+    std::cout
+        << "positions,agent_id,position_x,position_y,position_z,orientation_x,"
+           "orientation_y,orientation_z,orientation_w,angle,last_change\n";
+    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
+    {
+      Ptr<Node> node = NodeList::GetNode(i);
+      Ptr<ConstantVelocityMobilityModel> mob =
+          node->GetObject<ConstantVelocityMobilityModel>();
+      Quaternion orientation = mob->GetOrientation();
+      Vector position = mob->GetPosition();
+      std::cout << "positions"
+                << "," << i << "," << position.x << "," << position.y << ","
+                << position.z << "," << orientation.x << "," << orientation.y
+                << "," << orientation.z << "," << orientation.w << "," << drones[i].angle
+                << "," << drones[i].last_change << "\n";
+    }
+    std::cout << std::flush;
   }
-  std::cout << std::flush;
-}
