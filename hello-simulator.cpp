@@ -116,28 +116,28 @@ int main(int argc, char *argv[])
   bool enableDelayedStart = false;
 
   CommandLine cmd;
-  cmd.AddValue("scenarioType", "Scenario type", scenarioType);
+  cmd.AddValue("scenario", "Scenario type", scenarioType);
   cmd.AddValue("enablePcap", "Enable pcap", enablePcap);
   cmd.AddValue("distance",
                "Distance in meters between the station and the access point",
                distance);
-  cmd.AddValue("agentType", "Type of the agents (Client,Drone)", agent_type);
-  cmd.AddValue("simulationTime", "Simulation time in seconds", simulationTime);
+  cmd.AddValue("type", "Type of the agents (Client,Drone)", agent_type);
+  cmd.AddValue("duration", "Simulation time in seconds", simulationTime);
   cmd.AddValue("udp", "UDP if set to 1, TCP otherwise", udp);
-  cmd.AddValue("wifiManager", "Use the specified wifiManager", wifiManager);
+  cmd.AddValue("manager", "Use the specified wifiManager", wifiManager);
   cmd.AddValue("mcs", "Test a specific MCS (0-9)", mcs);
-  cmd.AddValue("channelWidth", "Specifies the channel width (20, 40, 80, 160",
+  cmd.AddValue("width", "Specifies the channel width (20, 40, 80, 160",
                channelWidth);
   cmd.AddValue("sgi", "Specifies whether the short guard interval is used",
                sgi);
   cmd.AddValue("N", "Number of nodes in the simulation", N);
-  cmd.AddValue("dataRate", "Datarate", dataRate);
-  cmd.AddValue("antennaGain", "antennaGain", antennaGain);
-  cmd.AddValue("packetSize", "Packet Size to use for the On/Off applications",
+  cmd.AddValue("rate", "Datarate", dataRate);
+  cmd.AddValue("gain", "antennaGain", antennaGain);
+  cmd.AddValue("size", "Packet Size to use for the On/Off applications",
                packetSize);
-  cmd.AddValue("antennaModel", "antennaModel", antennaModel);
-  cmd.AddValue("enableFastFading", "enableFastFading", enableFastFading);
-  cmd.AddValue("enableDelayedStart", "Delay start by a random time for each node", enableDelayedStart);
+  cmd.AddValue("model", "antennaModel", antennaModel);
+  cmd.AddValue("nakagami", "enableFastFading", enableFastFading);
+  cmd.AddValue("delayed", "Delay start by a random time for each node", enableDelayedStart);
   cmd.Parse(argc, argv);
 
   Simulation simulation = Simulation();
