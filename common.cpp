@@ -358,13 +358,13 @@ void Drone::controller(double duration)
         // std::cout << "We move right\n";
         NodeList::GetNode(id)
             ->GetObject<ConstantVelocityMobilityModel>()
-            ->SetAngularVelocity(Vector(0.0, 0.0, 0.50));
+            ->SetAngularVelocity(Vector(0.0, 0.0, std::abs(speed)));
       }
       else
       {
         NodeList::GetNode(id)
             ->GetObject<ConstantVelocityMobilityModel>()
-            ->SetAngularVelocity(Vector(0.0, 0.0, -0.50));
+            ->SetAngularVelocity(Vector(0.0, 0.0, -std::abs(speed)));
       }
     }
     else
@@ -382,9 +382,11 @@ void Drone::controller(double duration)
 
   if (!has_neighbors)
   {
+    if (Simulator::Now().GetSeconds() > delay) {
     NodeList::GetNode(id)
         ->GetObject<ConstantVelocityMobilityModel>()
         ->SetAngularVelocity(Vector(0.0, 0.0, speed));
+    }
   }
 
   /*
@@ -702,7 +704,7 @@ void Simulation::MacTxDataFailed(std::string nodeIdStr,
 }
 
 void Simulation::init(std::vector<std::string> agent_types, int agent_number,
-                      double simulationTime, ScenarioType scenarioType, Ptr<UniformRandomVariable> randomVariable)
+                      double simulationTime, ScenarioType scenarioType, bool enableDelayedStart, Ptr<UniformRandomVariable> randomVariable)
 {
   this->simulationTime = simulationTime;
   this->wifiNodes.Create(agent_number);
@@ -715,7 +717,10 @@ void Simulation::init(std::vector<std::string> agent_types, int agent_number,
     drones[node->GetId()] = Drone();
     drones[node->GetId()].agent_type = agent_types[i];
     drones[node->GetId()].id = node->GetId();
-    drones[node->GetId()].speed = 0.50 - 0.05 + (randomVariable->GetValue() * 0.10) / (randomVariable->GetMax() - randomVariable->GetMin());
+    if (enableDelayedStart) {
+      drones[node->GetId()].delay = 1.0 + (randomVariable->GetValue() * 19.0) / (randomVariable->GetMax() - randomVariable->GetMin());
+    }
+    drones[node->GetId()].speed = 1.00 - 0.05 + (randomVariable->GetValue() * 0.20) / (randomVariable->GetMax() - randomVariable->GetMin());
     if (randomVariable->GetValue() >= ((randomVariable->GetMax() - randomVariable->GetMin()) / 2.0))
     {
       drones[node->GetId()].speed *= -1.0;
