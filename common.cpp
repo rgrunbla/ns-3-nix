@@ -40,6 +40,57 @@ inline static double distanceAngDeg(double a, double b)
   }
 }
 
+
+void PopulateARPcache () {
+	Ptr<ArpCache> arp = CreateObject<ArpCache> ();
+	arp->SetAliveTimeout (Seconds (3600 * 24 * 365) );
+
+	for (NodeList::Iterator i = NodeList::Begin (); i != NodeList::End (); ++i)
+	{
+		Ptr<Ipv4L3Protocol> ip = (*i)->GetObject<Ipv4L3Protocol> ();
+		NS_ASSERT (ip !=0);
+		ObjectVectorValue interfaces;
+		ip->GetAttribute ("InterfaceList", interfaces);
+
+		for (ObjectVectorValue::Iterator j = interfaces.Begin (); j != interfaces.End (); j++)
+		{
+			Ptr<Ipv4Interface> ipIface = (*j).second->GetObject<Ipv4Interface> ();
+			NS_ASSERT (ipIface != 0);
+			Ptr<NetDevice> device = ipIface->GetDevice ();
+			NS_ASSERT (device != 0);
+			Mac48Address addr = Mac48Address::ConvertFrom (device->GetAddress () );
+
+			for (uint32_t k = 0; k < ipIface->GetNAddresses (); k++)
+			{
+				Ipv4Address ipAddr = ipIface->GetAddress (k).GetLocal();
+				if (ipAddr == Ipv4Address::GetLoopback ())
+					continue;
+
+				ArpCache::Entry *entry = arp->Add (ipAddr);
+				Ipv4Header ipv4Hdr;
+				ipv4Hdr.SetDestination (ipAddr);
+				Ptr<Packet> p = Create<Packet> (100);
+				entry->MarkWaitReply (ArpCache::Ipv4PayloadHeaderPair (p, ipv4Hdr));
+				entry->MarkAlive (addr);
+			}
+		}
+	}
+
+	for (NodeList::Iterator i = NodeList::Begin (); i != NodeList::End (); ++i)
+	{
+		Ptr<Ipv4L3Protocol> ip = (*i)->GetObject<Ipv4L3Protocol> ();
+		NS_ASSERT (ip !=0);
+		ObjectVectorValue interfaces;
+		ip->GetAttribute ("InterfaceList", interfaces);
+
+		for (ObjectVectorValue::Iterator j = interfaces.Begin (); j != interfaces.End (); j ++)
+		{
+			Ptr<Ipv4Interface> ipIface = (*j).second->GetObject<Ipv4Interface> ();
+			ipIface->SetAttribute ("ArpCache", PointerValue (arp) );
+		}
+	}
+}
+
 inline double uap_ac_mesh_antenna(double theta, double phi)
 {
   float antenna_gain[360]{
@@ -369,7 +420,6 @@ void Drone::controller(double duration)
     }
     else
     {
-      //std::cout << "Already there!\n";
       NodeList::GetNode(id)
           ->GetObject<ConstantVelocityMobilityModel>()
           ->SetAngularVelocity(Vector(0.0, 0.0, 0.0));
@@ -433,6 +483,9 @@ void Simulation::createNodeMap()
       }
     }
   }
+  /* Special node id for broadcast address */
+  this->nodes.insert(std::pair<std::string, uint32_t>("03-06-ff:ff:ff:ff:ff:ff", 1337));
+  this->nodes.insert(std::pair<std::string, uint32_t>("02-06-ff:ff:ff:ff:ff:ff", 1337));
 }
 
 PacketInfo Simulation::getPacketInfo(Ptr<Packet> p)
@@ -601,13 +654,28 @@ void Simulation::DevMonitorSnifferRx(
     Ptr<Packet> copy = packet->Copy();
     PacketInfo packetInfo = this->getPacketInfo(copy);
 
-    // MonitorQuery monitor_query = MonitorQuery();
-
     if (packetInfo.data_type == 0)
     { /* Data Frame */
       if ((int)node != packetInfo.addr1)
       {
-        return;
+          if(this->scenarioType == CHAIN || this->scenarioType == SIMPLE) {
+            if (std::abs((int) packetInfo.addr2 - (int) node) > 1.0) {
+                /* The node is not my neighbour */
+                return;
+            } else {
+              source_agent_id = packetInfo.addr2;
+            }
+          } else if (this->scenarioType == SINK) {
+            if ((node == 0) || (packetInfo.addr2 == 0)) {
+              /* 0 is the neighbour of everyone */
+              source_agent_id = packetInfo.addr2;
+            } else {
+                /* The node is not my neighbour */
+                return;
+            }
+          } else {
+            exit(-1);
+          }
       }
       else
       {
@@ -634,7 +702,6 @@ void Simulation::DevMonitorSnifferRx(
     }
     else
     {
-      /* std::cout << "Non ack / data packet, ignoring.\n"; */
       return;
     }
     destination_agent_id = node;
@@ -664,7 +731,10 @@ void Simulation::DevMonitorSnifferTx(std::string nodeIdStr,
     { /* Data Frame */
       if (packetInfo.addr1 != -1)
       {
-        drones[node].last_transmitted = packetInfo.addr1;
+        /* Non broadcast frame */
+        if (packetInfo.addr1 != 1337) {
+          drones[node].last_transmitted = packetInfo.addr1;
+        }
       }
     }
     else if (packetInfo.data_type == 1)
@@ -1018,61 +1088,7 @@ void Simulation::init(std::vector<std::string> agent_types, int agent_number,
 
     /* Generate traffic to populate the ARP tables before the start of the
    * applications */
-    for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
-    {
-      uint16_t port = 1337;
-      PacketSinkHelper sink(
-          "ns3::UdpSocketFactory",
-          InetSocketAddress(this->interfaces.GetAddress(i), port));
-      ApplicationContainer serverApp = sink.Install(wifiNodes.Get(i));
-      serverApp.Start(Seconds(0.0));
-      serverApp.Stop(Seconds(1));
-
-      if (this->scenarioType == CHAIN)
-      {
-        /* Node Before */
-        if (i > 0)
-        {
-          UdpClientHelper client(
-              InetSocketAddress(this->interfaces.GetAddress(i - 1), port));
-          client.SetAttribute("MaxPackets", UintegerValue(10));
-          client.SetAttribute("Interval", TimeValue(Seconds(.05)));
-          client.SetAttribute("PacketSize", UintegerValue(12));
-
-          ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-          clientApp.Start(Seconds(i * 0.02));
-          clientApp.Stop(Seconds(1));
-        }
-        /* Node After */
-        if (i < NodeList::GetNNodes() - 1)
-        {
-          UdpClientHelper client(
-              InetSocketAddress(this->interfaces.GetAddress(i + 1), port));
-          client.SetAttribute("MaxPackets", UintegerValue(10));
-          client.SetAttribute("Interval", TimeValue(Seconds(.05)));
-          client.SetAttribute("PacketSize", UintegerValue(12));
-
-          ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-          clientApp.Start(Seconds(i * 0.02));
-          clientApp.Stop(Seconds(1));
-        }
-      }
-      else if ((this->scenarioType == SIMPLE) || (this->scenarioType == SINK))
-      {
-        if (i != 0)
-        {
-          UdpClientHelper client(
-              InetSocketAddress(this->interfaces.GetAddress(0), port));
-          client.SetAttribute("MaxPackets", UintegerValue(10));
-          client.SetAttribute("Interval", TimeValue(Seconds(.05)));
-          client.SetAttribute("PacketSize", UintegerValue(12));
-
-          ApplicationContainer clientApp = client.Install(wifiNodes.Get(i));
-          clientApp.Start(Seconds(i * 0.02));
-          clientApp.Stop(Seconds(1));
-        }
-      }
-    }
+    PopulateARPcache();
 
     /* Broadcast 10 times per second with the neighbours */
     for (uint32_t i = 0; i < NodeList::GetNNodes(); ++i)
@@ -1111,20 +1127,17 @@ void Simulation::init(std::vector<std::string> agent_types, int agent_number,
       socketFactory = "ns3::TcpSocketFactory";
     }
 
-    PacketSinkHelper sink(
-        socketFactory, InetSocketAddress(this->interfaces.GetAddress(0), port));
+    PacketSinkHelper sink(socketFactory, InetSocketAddress(this->interfaces.GetAddress(0), port));
     this->serverApp = sink.Install(wifiNodes.Get(0));
     this->serverApp.Start(Seconds(0.0));
     this->serverApp.Stop(Seconds(this->simulationTime + 1));
 
     if ((this->scenarioType == SIMPLE) || (this->scenarioType == CHAIN))
     {
-      OnOffHelper onoff(socketFactory,
-                        InetSocketAddress(this->interfaces.GetAddress(0), port));
+      OnOffHelper onoff(socketFactory, InetSocketAddress(this->interfaces.GetAddress(0), port));
       onoff.SetConstantRate(DataRate(this->dataRate), this->packetSize);
       onoff.SetAttribute("StartTime", TimeValue(Seconds(1.000000)));
-      ApplicationContainer clientApp =
-          onoff.Install(wifiNodes.Get(NodeList::GetNNodes() - 1));
+      ApplicationContainer clientApp = onoff.Install(wifiNodes.Get(NodeList::GetNNodes() - 1));
       clientApp.Start(Seconds(1.0));
       clientApp.Stop(Seconds(this->simulationTime + 1));
     }
@@ -1133,9 +1146,7 @@ void Simulation::init(std::vector<std::string> agent_types, int agent_number,
       for (uint32_t i = 1; i < NodeList::GetNNodes(); ++i)
       {
 
-        OnOffHelper onoff(
-            socketFactory,
-            InetSocketAddress(this->interfaces.GetAddress(0), port));
+        OnOffHelper onoff(socketFactory, InetSocketAddress(this->interfaces.GetAddress(0), port));
         onoff.SetConstantRate(DataRate(dataRate), this->packetSize);
         onoff.SetAttribute("StartTime", TimeValue(Seconds(1.0)));
         ApplicationContainer clientApp = onoff.Install(wifiNodes.Get(i));
