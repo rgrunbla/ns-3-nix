@@ -113,9 +113,6 @@ inline double uap_ac_mesh_pro_antenna(double theta, double phi)
       -3.5f, -3.6f, -3.8f, -4.0f, -4.1f, -4.3f, -4.4f, -4.5f, -4.6f, -4.6f,
       -4.6f, -4.5f, -4.3f, -4.1f, -3.8f, -3.5f, -3.1f, -2.8f, -2.5f, -2.2f,
       -1.9f, -1.6f, -1.4f, -1.2f, -1.1f, -1.0f, -0.9f, -0.9f, -0.9f, -1.0f,
-      -1.1f, -1.3f, -1.5f, -1.8f, -2.0f, -2.3f, -2.6f, -2.8f, -3.0f, -3.1f,
-      -3.2f, -3.1f, -2.9f, -2.7f, -2.3f, -2.0f, -1.6f, -1.2f, -0.9f, -0.6f,
-      -0.4f, -0.2f, -0.1f, -0.0f, 0.0f, -0.0f, -0.1f, -0.3f, -0.5f, -0.7f,
       -0.9f, -1.2f, -1.4f, -1.6f, -1.7f, -1.8f, -1.9f, -1.9f, -1.8f, -1.7f,
       -1.5f, -1.4f, -1.2f, -1.1f, -1.0f, -0.9f, -0.8f, -0.8f, -0.8f, -0.8f,
       -0.9f, -1.0f, -1.1f, -1.3f, -1.5f, -1.7f, -2.0f, -2.3f, -2.6f, -3.0f,
@@ -358,13 +355,13 @@ void Drone::controller(double duration)
         // std::cout << "We move right\n";
         NodeList::GetNode(id)
             ->GetObject<ConstantVelocityMobilityModel>()
-            ->SetAngularVelocity(Vector(0.0, 0.0, 0.50));
+            ->SetAngularVelocity(Vector(0.0, 0.0, std::abs(speed)));
       }
       else
       {
         NodeList::GetNode(id)
             ->GetObject<ConstantVelocityMobilityModel>()
-            ->SetAngularVelocity(Vector(0.0, 0.0, -0.50));
+            ->SetAngularVelocity(Vector(0.0, 0.0, -std::abs(speed)));
       }
     }
     else
@@ -382,9 +379,11 @@ void Drone::controller(double duration)
 
   if (!has_neighbors)
   {
+    if (Simulator::Now().GetSeconds() > delay) {
     NodeList::GetNode(id)
         ->GetObject<ConstantVelocityMobilityModel>()
         ->SetAngularVelocity(Vector(0.0, 0.0, speed));
+    }
   }
 
   /*
@@ -702,7 +701,7 @@ void Simulation::MacTxDataFailed(std::string nodeIdStr,
 }
 
 void Simulation::init(std::vector<std::string> agent_types, int agent_number,
-                      double simulationTime, ScenarioType scenarioType, Ptr<UniformRandomVariable> randomVariable)
+                      double simulationTime, ScenarioType scenarioType, bool enableDelayedStart, Ptr<UniformRandomVariable> randomVariable)
 {
   this->simulationTime = simulationTime;
   this->wifiNodes.Create(agent_number);
@@ -715,7 +714,10 @@ void Simulation::init(std::vector<std::string> agent_types, int agent_number,
     drones[node->GetId()] = Drone();
     drones[node->GetId()].agent_type = agent_types[i];
     drones[node->GetId()].id = node->GetId();
-    drones[node->GetId()].speed = 0.50 - 0.05 + (randomVariable->GetValue() * 0.10) / (randomVariable->GetMax() - randomVariable->GetMin());
+    if (enableDelayedStart) {
+      drones[node->GetId()].delay = 1.0 + (randomVariable->GetValue() * 19.0) / (randomVariable->GetMax() - randomVariable->GetMin());
+    }
+    drones[node->GetId()].speed = 1.00 - 0.05 + (randomVariable->GetValue() * 0.20) / (randomVariable->GetMax() - randomVariable->GetMin());
     if (randomVariable->GetValue() >= ((randomVariable->GetMax() - randomVariable->GetMin()) / 2.0))
     {
       drones[node->GetId()].speed *= -1.0;

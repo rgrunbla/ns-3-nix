@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
   double antennaGain = 3.0;
   std::string antennaModel = "uap-ac-mesh";
   bool enableFastFading = false;
+  bool enableDelayedStart = false;
 
   CommandLine cmd;
   cmd.AddValue("scenarioType", "Scenario type", scenarioType);
@@ -136,6 +137,7 @@ int main(int argc, char *argv[])
                packetSize);
   cmd.AddValue("antennaModel", "antennaModel", antennaModel);
   cmd.AddValue("enableFastFading", "enableFastFading", enableFastFading);
+  cmd.AddValue("enableDelayedStart", "Delay start by a random time for each node", enableDelayedStart);
   cmd.Parse(argc, argv);
 
   Simulation simulation = Simulation();
@@ -163,7 +165,7 @@ int main(int argc, char *argv[])
   Ptr<UniformRandomVariable> randomVariable =
       CreateObject<UniformRandomVariable>();
 
-  simulation.init(agent_types, N, simulationTime, static_cast<ScenarioType>(scenarioType), randomVariable);
+  simulation.init(agent_types, N, simulationTime, static_cast<ScenarioType>(scenarioType), enableDelayedStart, randomVariable);
 
   Ptr<ListPositionAllocator> positionAlloc =
       CreateObject<ListPositionAllocator>();
